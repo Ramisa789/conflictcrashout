@@ -18,9 +18,10 @@ body {
 
 
 .top-bar {
-    height: 70px;
+    height: 50px;
     border-bottom: 2px solid #1E1E1E;
     background: #A12523;
+    padding: 20px;
 }
 
 .gameboy-shell {
@@ -41,6 +42,22 @@ body {
 
 .game-title div {
     margin-right: 10; 
+}
+
+.bar-icon {
+    background-color: #FCD8CC;
+    height: 30px;
+    width: 30px;
+    padding: 10px;
+    border: 2px solid #1E1E1E;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bar-icon:hover {
+    transform: translateY(-5px); /* Moves it up */
+    box-shadow: 0 5px 0 rgba(0, 0, 0, 0.8); /* solid shadow */
 }
 
 .game-title h1 {

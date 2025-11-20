@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
 import { resolveAllConflicts } from './utils';
 import { MergeOption } from './types';
+import { generateQuestions } from './mathGame';
 
 export function activate(context: vscode.ExtensionContext) {
-    vscode.workspace.onDidOpenTextDocument((doc) => {
+    const displayPopup = (doc: any) => {
         if (hasMergeConflict(doc.getText())) {
             vscode.window.showInformationMessage(
                 'Merge conflict detected! Play a game to resolve?',
@@ -14,7 +15,11 @@ export function activate(context: vscode.ExtensionContext) {
                 }
             });
         }
-    });
+    }
+    
+    vscode.workspace.textDocuments.forEach(displayPopup);
+    vscode.workspace.onDidSaveTextDocument(displayPopup);
+    vscode.workspace.onDidOpenTextDocument(displayPopup);
 }
 
 function hasMergeConflict(text: string): boolean {
@@ -71,15 +76,28 @@ async function openGameWebview(
 
                     break;
 
-                case "finishResult":
-                    const gameChoice = message.result;
-                    const userChoice = message.option as MergeOption;
-                    const options = [MergeOption.Current, MergeOption.Incoming, MergeOption.Combination];
-                    const opponent = chooseRandomOpponent(options, userChoice);
-                    const winner = chooseWeightedWinner(userChoice, opponent);
-                    await resolveAllConflicts(doc, winner);
+                case "playMathGame":
+                    const questions = generateQuestions();
                     vscode.window.showInformationMessage(
-                        `Game result: ${message.result}` + `... Winner: ${winner}`
+                        `Option: ${message.option}` + ` Winner: ${message.winner}`
+                    );
+                    panel.webview.postMessage({ 
+                        command: 'displayMathGame',
+                        questions: questions,
+                        option: message.option,
+                        winner: message.winner
+                    });
+                    
+
+                case "finishResult":
+                    // const gameChoice = message.result;
+                    // const userChoice = message.option as MergeOption;
+                    // const options = [MergeOption.Current, MergeOption.Incoming, MergeOption.Combination];
+                    // const opponent = chooseRandomOpponent(options, userChoice);
+                    // const winner = chooseWeightedWinner(userChoice, opponent);
+                    await resolveAllConflicts(doc, message.winner);
+                    vscode.window.showInformationMessage(
+                        `Game result: ${message.result}` + `... Winner: ${message.winner}`
                     );
                     break;
                 case "closeExtension":
@@ -163,7 +181,7 @@ async function getHtmlForWebview(
         .replace("{{iconBomb}}", iconBomb.toString())
         .replace(/{{iconYou}}/g, iconYou.toString())
         .replace(/{{iconOpponent}}/g, iconOpponent.toString())
-        .replace("{{iconExit}}", iconExit.toString())
+        .replace(/{{iconExit}}/g, iconExit.toString())
         .replace("{{iconSkull}}", iconSkull.toString())
         .replace("{{fontJersey10}}", jersey10Uri.toString())
         .replace("{{fontJetBrains}}", jetBrainsUri.toString());
