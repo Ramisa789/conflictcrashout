@@ -131,9 +131,10 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
 
                         let questions = [];
                         if (message.winner == message.option) {
-                            questions = message.questions.slice(0, 4);
+                            message.questions.splice(4, 1);
+                            questions = message.questions
                         } else {
-                            questions = message.questions;
+                            questions = message.questions.slice(0, 5);
                         }
                         
                         var count = 0;
@@ -180,7 +181,7 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
                         }
 
                         function decreaseOpponentLives() {
-                            // Only decrease if player is supposed to win
+                            // Only decrease to 0 if player is supposed to win
                             if (message.winner == message.option) {
                                 opOneInterval = setInterval(() => {
                                     if (opOneLives > 0) {
@@ -209,6 +210,27 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
                                         showWinScreen()
                                     }
                                 }, 2200 + Math.random() * 2000);
+                            } else {
+                                // slowly decrease the timers for realism, but never go to zero
+                                opOneInterval = setInterval(() => {
+                                    if (opOneLives > 0) {
+                                        opOneLives--;
+                                        document.getElementById('mathOp1LivesDebug').textContent = '[Debug] Opponent 1 Lives ' + String(opOneLives) + '/3';
+                                    }
+                                    if (opOneLives === 1 && opOneInterval) {
+                                        clearInterval(opOneInterval);
+                                    }
+                                }, 5000 + Math.random() * 3000);
+
+                                opTwoInterval = setInterval(() => {
+                                    if (opTwoLives > 0) {
+                                        opTwoLives--;
+                                        document.getElementById('mathOp2LivesDebug').textContent = '[Debug] Opponent 2 Lives ' + String(opTwoLives) + '/3';
+                                    }
+                                    if (opTwoLives === 1 && opTwoInterval) {
+                                        clearInterval(opTwoInterval);
+                                    }
+                                }, 6000 + Math.random() * 2000);
                             }
                         }
 

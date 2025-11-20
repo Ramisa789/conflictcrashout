@@ -68,8 +68,8 @@ function generateQuestion2(): MathQuestion {
 
 // Question 3: Easy multiplication
 function generateQuestion3(): MathQuestion{
-  const a = rand(1, 10);
-  const b = rand(1, 10);
+  const a = rand(2, 10);
+  const b = rand(2, 10);
 
   let expression: string;
   let solution: number;
@@ -134,17 +134,8 @@ export function generateQuestions(): MathQuestion[] {
   const q4 = generateQuestion4();
   const q5 = generateQuestion5();
 
-  return [q1, q2, q3, q4, q5]
+  // Additional question for case when we want the player to win
+  const q6 = generateQuestion3();
+
+  return [q1, q2, q3, q4, q5, q6]
 }
-
-// const {expression: expression1, solution: solution1 } = generateQuestion1()
-// const {expression: expression2, solution: solution2 } = generateQuestion2()
-// const {expression: expression3, solution: solution3 } = generateQuestion3()
-// const {expression: expression4, solution: solution4 } = generateQuestion4()
-// const {expression: expression5, solution: solution5 } = generateQuestion5()
-
-// console.log(`${expression1} (answer = ${solution1})`)
-// console.log(`${expression2} (answer = ${solution2})`)
-// console.log(`${expression3} (answer = ${solution3})`)
-// console.log(`${expression4} (answer = ${solution4})`)
-// console.log(`${expression5} (answer = ${solution5})`)
