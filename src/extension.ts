@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import { resolveAllConflicts } from './utils';
+import { MergeOption } from './types';
 
 export function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidOpenTextDocument((doc) => {
@@ -17,6 +19,18 @@ export function activate(context: vscode.ExtensionContext) {
 
 function hasMergeConflict(text: string): boolean {
     return text.includes('<<<<<<<') && text.includes('=======');
+}
+
+function chooseRandomOpponent(options: MergeOption[], userChoice: MergeOption): MergeOption {
+    const opponents = options.filter(opt => opt !== userChoice);
+    const randomIndex = Math.floor(Math.random() * opponents.length);
+    return opponents[randomIndex];
+}
+
+function chooseWeightedWinner(userChoice: MergeOption, opponent: MergeOption): MergeOption {
+    const weighted: MergeOption[] = [userChoice, opponent, opponent];
+    const randomIndex = Math.floor(Math.random() * weighted.length);
+    return weighted[randomIndex];
 }
 
 async function openGameWebview(
@@ -58,8 +72,14 @@ async function openGameWebview(
                     break;
 
                 case "finishResult":
+                    const gameChoice = message.result;
+                    const userChoice = message.option as MergeOption;
+                    const options = [MergeOption.Current, MergeOption.Incoming, MergeOption.Combination];
+                    const opponent = chooseRandomOpponent(options, userChoice);
+                    const winner = chooseWeightedWinner(userChoice, opponent);
+                    await resolveAllConflicts(doc, winner);
                     vscode.window.showInformationMessage(
-                        `Game result: ${message.result}`
+                        `Game result: ${message.result}` + `... Winner: ${winner}`
                     );
                     break;
             }
