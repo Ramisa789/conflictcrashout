@@ -177,9 +177,6 @@ function mathGameLogic(generatedQuestions, winner, option) {
     var opOneLives = 3;
     var opTwoLives = 3;
 
-    // document.getElementById('main').classList.remove('active');
-    // document.getElementById('mathScreen').classList.add('active');
-
     if (winner == option) {
         generatedQuestions.splice(4, 1);
         questions = generatedQuestions;
@@ -194,7 +191,7 @@ function mathGameLogic(generatedQuestions, winner, option) {
     document.getElementById('mathOp1LivesDebug').textContent = '[Debug] Opponent 1 Lives ' + String(opOneLives) + '/3';
     document.getElementById('mathOp2LivesDebug').textContent = '[Debug] Opponent 2 Lives ' + String(opTwoLives) + '/3';
 
-    document.getElementById('mathWinner').textContent = '[Debug] Player: ' + String(message.option) + ' Winner: ' + String(message.winner);
+    document.getElementById('mathWinner').textContent = '[Debug] Player: ' + String(option) + ' Winner: ' + String(winner);
 
     document.getElementById('mathQuestionNum').textContent = '[Debug] Question ' + String(count + 1) + '/' + String(questions.length);
 
