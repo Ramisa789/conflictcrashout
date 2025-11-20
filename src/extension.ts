@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { resolveAllConflicts } from './utils';
 import { MergeOption } from './types';
+import { generateQuestions } from './mathGame';
 
 export function activate(context: vscode.ExtensionContext) {
     const displayPopup = (doc: any) => {
@@ -75,15 +76,28 @@ async function openGameWebview(
 
                     break;
 
-                case "finishResult":
-                    const gameChoice = message.result;
-                    const userChoice = message.option as MergeOption;
-                    const options = [MergeOption.Current, MergeOption.Incoming, MergeOption.Combination];
-                    const opponent = chooseRandomOpponent(options, userChoice);
-                    const winner = chooseWeightedWinner(userChoice, opponent);
-                    await resolveAllConflicts(doc, winner);
+                case "playMathGame":
+                    const questions = generateQuestions();
                     vscode.window.showInformationMessage(
-                        `Game result: ${message.result}` + `... Winner: ${winner}`
+                        `Option: ${message.option}` + ` Winner: ${message.winner}`
+                    );
+                    panel.webview.postMessage({ 
+                        command: 'displayMathGame',
+                        questions: questions,
+                        option: message.option,
+                        winner: message.winner
+                    });
+                    
+
+                case "finishResult":
+                    // const gameChoice = message.result;
+                    // const userChoice = message.option as MergeOption;
+                    // const options = [MergeOption.Current, MergeOption.Incoming, MergeOption.Combination];
+                    // const opponent = chooseRandomOpponent(options, userChoice);
+                    // const winner = chooseWeightedWinner(userChoice, opponent);
+                    await resolveAllConflicts(doc, message.winner);
+                    vscode.window.showInformationMessage(
+                        `Game result: ${message.result}` + `... Winner: ${message.winner}`
                     );
                     break;
                 case "closeExtension":

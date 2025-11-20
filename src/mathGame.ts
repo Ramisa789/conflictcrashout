@@ -3,7 +3,6 @@ import {
   derivative, evaluate,
 } from 'mathjs'
 
-let lives = 3;
 
 type MathQuestion = {
   expression: string;

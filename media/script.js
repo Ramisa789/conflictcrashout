@@ -94,6 +94,18 @@ document.getElementById('spinBtn').addEventListener('click', () => {
     requestAnimationFrame(animate);
 });
 
+function chooseRandomOpponent(options, userChoice) {
+    const opponents = options.filter(opt => opt !== userChoice);
+    const randomIndex = Math.floor(Math.random() * opponents.length);
+    return opponents[randomIndex];
+}
+
+function chooseWeightedWinner(userChoice, opponent) {
+    const weighted = [userChoice, opponent, opponent];
+    const randomIndex = Math.floor(Math.random() * weighted.length);
+    return weighted[randomIndex];
+}
+
 // Show game page based on chosen index
 function showGamePage(index) {
     const pages = ['page-coding', 'page-typing', 'page-math'];
@@ -105,10 +117,19 @@ function showGamePage(index) {
 
     // Update selected fighter
     const selectedFighter = document.getElementById('selected-fighter');
+
     if (selectedFighter) selectedFighter.textContent = wheelOptions[index];
+    
+    const options = ['Current Changes', 'Incoming Changes', 'Combination'];
+    const opponent = chooseRandomOpponent(options, selectedOption);
+    const winner = chooseWeightedWinner(selectedOption, opponent);
+
+    if (pages[index] == 'page-math') {
+        vscode.postMessage({ command: 'playMathGame', option: selectedOption, winner })
+    }
 
     // Notify extension
-    vscode.postMessage({ command: 'finishResult', result: wheelOptions[index], option: selectedOption });
+    vscode.postMessage({ command: 'finishResult', result: wheelOptions[index], option: selectedOption, winner });
 }
 
 // Close extension buttons
@@ -121,6 +142,14 @@ document.getElementById('closeBtnLose').addEventListener('click', () => {
 });
 
 // ==== MATH GAME ====
+
+window.addEventListener('message', function(event) {
+    var message = event.data;
+
+    if (message.command === 'displayMathGame') {
+        mathGameLogic(message.questions, message.option, message.winner);
+    }
+});
 
 function getFailureMessage() {
     const messages = [
@@ -136,21 +165,22 @@ function getFailureMessage() {
     return messages[Math.floor(Math.random() * messages.length)];
 }
 
-function mathGameLogic(message) {
+function mathGameLogic(generatedQuestions, winner, option) {
+    let questions = [];
+
     var lives = 3;
 
     var opOneLives = 3;
     var opTwoLives = 3;
 
-    document.getElementById('main').classList.remove('active');
-    document.getElementById('mathScreen').classList.add('active');
+    // document.getElementById('main').classList.remove('active');
+    // document.getElementById('mathScreen').classList.add('active');
 
-    let questions = [];
-    if (message.winner == message.option) {
-        message.questions.splice(4, 1);
-        questions = message.questions
+    if (winner == option) {
+        generatedQuestions.splice(4, 1);
+        questions = generatedQuestions;
     } else {
-        questions = message.questions.slice(0, 5);
+        questions = generatedQuestions.slice(0, 5);
     }
     
     var count = 0;
@@ -184,7 +214,7 @@ function mathGameLogic(message) {
 
     function decreaseOpponentLives() {
         // Only decrease to 0 if player is supposed to win
-        if (message.winner == message.option) {
+        if (winner == option) {
             opOneInterval = setInterval(() => {
                 if (opOneLives > 0) {
                     opOneLives--;
@@ -209,7 +239,7 @@ function mathGameLogic(message) {
                 }
 
                 if (opOneLives === 0 && opTwoLives === 0) {
-                    showWinScreen()
+                    showWinScreen();
                 }
             }, 2200 + Math.random() * 2000);
         } else {
