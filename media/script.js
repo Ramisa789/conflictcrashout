@@ -100,6 +100,10 @@ function showGamePage(index) {
     pages.forEach((id, i) => {
         document.getElementById(id).style.display = i === index ? 'block' : 'none';
     });
+    // document.getElementById('page-typing').style.display = 'block'; //TODO: REMOVE LATER
+    // if (wheelOptions[index] === 'Typing Race') {
+    //     startTypingGame();
+    // }
 
     document.getElementById('wheel-page').style.display = 'none';
 
@@ -119,3 +123,71 @@ document.getElementById('closeBtnWin').addEventListener('click', () => {
 document.getElementById('closeBtnLose').addEventListener('click', () => {
     vscode.postMessage({ command: 'closeExtension' });
 });
+
+// Typing Race Game Functions
+function getRandomQuote() {
+    const QUOTES = [
+            "You don't lose when the scoreboard says so, you lose when you give up.",
+            "You only fail when you stop believing in yourself.",
+            "A bad game doesn't make you a bad player.",
+            "Losing doesn't define you, it only proves you're still trying.",
+            "Defeat is not an end, it's a new beginning.",
+            "One defeat doesn NOT take away the effort and heart you put in."
+        ];
+    const idx = Math.floor(Math.random() * QUOTES.length);
+    return QUOTES[idx];
+}
+
+function calculateWPM(charsTyped, elapsedMs) {
+    if (elapsedMs === 0) return 0;
+    const words = charsTyped / 5;
+    const minutes = elapsedMs / 60000;
+    return Math.round(words / minutes);
+}
+
+function getOpponentWPM(userWPM, winner) {
+    if (winner === selectedOption) {
+        // Opponent is just 1 WPM slower than user
+        return Math.max(1, userWPM - 1);
+    } else {
+        // Opponent won and is double the user's WPM
+        return Math.max(1, userWPM * 2);
+    }
+}
+
+function startTypingGame() {
+    const quote = getRandomQuote();
+    document.getElementById('typing-quote').textContent = quote;
+    let startTime = null;
+    let timerStarted = false;
+    let wpmElem = document.getElementById('wpm');
+    let opponentWpmElem = document.getElementById('opponentWpm');
+    let typingBox = document.getElementById('typingBox');
+    typingBox.value = '';
+    wpmElem.textContent = 'WPM: 0';
+    opponentWpmElem.textContent = 'WPM: 0';
+    typingBox.oninput = function(e) {
+        const input = e.target.value;
+        if (!timerStarted && input.length > 0) {
+            startTime = Date.now();
+            timerStarted = true;
+        }
+        const elapsed = timerStarted ? Date.now() - startTime : 0;
+        const wpm = calculateWPM(input.length, elapsed);
+        wpmElem.textContent = 'WPM: ' + wpm;
+        const winner = 'Combination'
+        const opponentWpm = getOpponentWPM(wpm, winner);
+        opponentWpmElem.textContent = 'WPM: ' + opponentWpm;
+        let correct = 0;
+        for (let i = 0; i < input.length; i++) {
+            if (input[i] === quote[i]) correct++;
+        }
+    };
+    typingBox.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const vscode = acquireVsCodeApi();
+            vscode.postMessage({ command: 'applyWinner', winner: winner });
+        }
+    });
+}
