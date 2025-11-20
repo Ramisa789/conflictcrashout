@@ -82,6 +82,9 @@ async function openGameWebview(
                         `Game result: ${message.result}` + `... Winner: ${winner}`
                     );
                     break;
+                case "closeExtension":
+                    panel.dispose(); // This will close the webview panel
+                    break;
             }
         },
         undefined,
@@ -126,8 +129,20 @@ async function getHtmlForWebview(
         vscode.Uri.joinPath(context.extensionUri, "media", "icons", "bomb.svg")
     );
 
-    const iconHand = webview.asWebviewUri(
-        vscode.Uri.joinPath(context.extensionUri, "media", "icons", "hand.svg")
+    const iconYou = webview.asWebviewUri(
+        vscode.Uri.joinPath(context.extensionUri, "media", "icons", "you.svg")
+    );
+
+    const iconOpponent = webview.asWebviewUri(
+        vscode.Uri.joinPath(context.extensionUri, "media", "icons", "opponent.svg")
+    );
+
+    const iconExit = webview.asWebviewUri(
+        vscode.Uri.joinPath(context.extensionUri, "media", "icons", "exit.svg")
+    );
+
+    const iconSkull = webview.asWebviewUri(
+        vscode.Uri.joinPath(context.extensionUri, "media", "icons", "skull.svg")
     );
 
     const jersey10Uri = webview.asWebviewUri(
@@ -146,7 +161,10 @@ async function getHtmlForWebview(
         .replace("{{iconCurrent}}", iconCurrent.toString())
         .replace("{{iconCombination}}", iconCombination.toString())
         .replace("{{iconBomb}}", iconBomb.toString())
-        .replace("{{iconHand}}", iconHand.toString())
+        .replace(/{{iconYou}}/g, iconYou.toString())
+        .replace(/{{iconOpponent}}/g, iconOpponent.toString())
+        .replace("{{iconExit}}", iconExit.toString())
+        .replace("{{iconSkull}}", iconSkull.toString())
         .replace("{{fontJersey10}}", jersey10Uri.toString())
         .replace("{{fontJetBrains}}", jetBrainsUri.toString());
 

@@ -177,3 +177,109 @@ body {
     transform: translateY(-5px); /* Moves it up */
     box-shadow: 0 5px 0 rgba(0, 0, 0, 0.8); /* solid shadow */
 }
+
+.game-page {
+    text-align: center;
+    margin-bottom: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.game-name {
+    font-size: 70px;
+    color: #A12523;
+    margin-bottom: 10px;
+}
+
+.player-boxes {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    color: #1E1E1E;
+}
+
+.player {
+    display: flex;
+    flex-direction: column;
+    font-size: 30px;
+    background-color: #FCD8CC;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 120px;
+    width: 180px;
+    border: 2px solid #1E1E1E;
+    border-radius: 15px;
+}
+
+
+.opponent {
+    display: flex;
+    flex-direction: column;
+    font-size: 30px;
+    background-color: #FCD8CC;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 120px;
+    width: 180px;
+    border: 2px solid #1E1E1E;
+    border-radius: 15px;
+}
+
+.game-box {
+    background-color: white;
+    border: 2px solid #1E1E1E;
+    border-radius: 12px;
+    width: 90%;
+    min-height: 500px;
+    margin: auto 0px;
+}
+
+.win-lose {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+font-size: 90px;
+color: #A12523;
+}
+
+.win-lose-text {
+    margin: 0;
+
+}
+
+.bottom-text {
+    margin-top: 0;
+    position: relative;
+    top: -80px;
+}
+
+.applying {
+    margin-top: 0;
+    font-size: 35px;
+    position: relative;
+    top: -200px;
+}
+
+.exit-btn {
+    position: relative;
+    top: -200px;
+    background-color: #FCD8CC;
+    border: 2px solid #1E1E1E;
+    border-radius: 12px;
+    font-size: 40px;
+    padding: 0px 25px;
+    font-family: 'Jersey 10';
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+.exit-btn:hover {
+    transform: translateY(-5px); /* Moves it up */
+    box-shadow: 0 5px 0 rgba(0, 0, 0, 0.8); /* solid shadow */
+}
