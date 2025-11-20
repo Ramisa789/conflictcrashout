@@ -1,0 +1,179 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: #FFF7EC; /* off-white gameboy screen */
+    image-rendering: pixelated;
+    font-family: 'Jersey 10';
+}
+
+@font-face {
+    font-family: 'Jersey10';
+    src: url("{{fontJersey10}}") format("truetype")
+}
+
+@font-face {
+    font-family: 'JetBrains';
+    src: url("{{fontJetBrains}}") format("truetype")
+}
+
+
+.top-bar {
+    height: 70px;
+    border-bottom: 2px solid #1E1E1E;
+    background: #A12523;
+}
+
+.gameboy-shell {
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.game-title {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    text-align: right;
+    margin-top: 20px;
+}
+
+.game-title div {
+    margin-right: 10; 
+}
+
+.game-title h1 {
+    margin: 0;
+    margin-right: 10px;
+}
+
+.sub-header {
+    font-size: 20px;
+    position: relative;
+    top: -20px;
+    font-family: 'JetBrains Mono';
+}
+
+.header {
+    background: #A12523;
+    color: white;
+    height: 50%;
+    border-radius: 15px;
+    text-align: center;
+    margin-bottom: 30px;
+    border: 2px solid #1E1E1E;
+    width: 90%;
+}
+
+.header h1 {
+    font-size: 70px;
+}
+
+.header > h1 {
+    margin: 0;
+    margin-top: 10px;
+    font-size: 60;
+}
+
+.header > h2 {
+    font-size: 40px;
+    font-family: 'JetBrains Mono';
+    margin-top: 0;
+    position: relative;
+    top: -15px;
+}
+
+.crashout {
+    position: relative;
+    top: -20px
+}
+
+.battle-sub-header {
+    font-size: 15px;
+    position: relative;
+    top: -40px;
+    font-family: 'JetBrains Mono';
+    font-weight: 200;
+}
+
+.fighter-option {
+    width: 70%;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    background: #FCD8CC;
+    border: 2px solid #1E1E1E;
+    border-radius: 14px;
+
+    padding: 20px;
+    margin-bottom: 20px;
+    height: 60px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.fighter-icon {
+    background-color: #FFF7EC;
+    padding: 10px;
+    border: 2px solid #1E1E1E;
+    border-radius: 18px;
+    width: 70px;
+}
+
+.fighter-text {
+    width: 100%;
+    margin-right: 30px;
+}
+
+.fighter-option:hover {
+    background: #f6d5cb;
+    transform: translateY(-5px); /* Moves it up */
+    box-shadow: 0 5px 0 rgba(0, 0, 0, 0.8); /* solid shadow */
+}
+
+.fighter-option img {
+    width: 48px;
+    height: 48px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fighter-name {
+    font-size: 40px;
+    color: #A12523;
+}
+
+.fighter-role {
+    font-size: 15px;
+    color: #333;
+    opacity: 0.7;
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 700;
+    color: #A12523;
+}
+
+.button-wheel {
+    display: flex;
+    flex-direction: column;
+    margin-top: 50px;
+    align-items: center;
+}
+
+.spin-btn {
+    font-family: 'Jersey 10';
+    font-size: 40px;
+    padding: 5px 20px;
+    border: 2px solid #1E1E1E;
+    border-radius: 15px;
+    color: #FCD8CC;
+    background-color: #C84C42;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-top: 20px;
+}
+
+.spin-btn:hover {
+    background: #C84C42;
+    transform: translateY(-5px); /* Moves it up */
+    box-shadow: 0 5px 0 rgba(0, 0, 0, 0.8); /* solid shadow */
+}

@@ -1,0 +1,75 @@
+<head>
+    <link rel="stylesheet" href="{{styleUri}}" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jersey+10&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Main Page -->
+    <div class="top-bar"></div>
+    <div id="main-page" class="gameboy-shell">
+        <div class="header">
+            <div class="game-title">
+                <div>
+                    <h1>CONFLICT</h1>
+                    <h1 class="crashout">CRASH-OUT</h1>
+                </div>
+                <!-- <img src="./icons/bomb.svg" height="110px"/> -->
+                <img src="{{iconBomb}}" height="100px" style="margin-top: 10px;" />
+            </div>
+            <div class="sub-header">★    Select Your Fighter    ★</div>
+        </div>
+
+        <div class="fighter-option" data-option="Incoming Changes">
+            <div class="fighter-icon">
+                <img src="{{iconIncoming}}">
+                <!-- <img src="icons/incoming.svg"> -->
+            </div>
+            <div class="fighter-text">
+                <div class="fighter-name">Incoming Changes</div>
+                <div class="fighter-role">The Challenger</div>
+            </div>
+        </div>
+
+        <div class="fighter-option" data-option="Current Changes">
+            <div class="fighter-icon">
+                <img src="{{iconCurrent}}">
+                <!-- <img src="icons/current.svg"> -->
+            </div>
+            <div class="fighter-text">
+                <div class="fighter-name">Current Changes</div>
+                <div class="fighter-role">The Defender</div>
+            </div>
+        </div>
+
+        <div class="fighter-option" data-option="Combination">
+            <div class="fighter-icon">
+                <img src="{{iconCombination}}">
+                <!-- <img src="icons/combination.svg"> -->
+            </div>  
+            <div class="fighter-text">
+                <div class="fighter-name">Combination</div>
+                <div class="fighter-role">The Compromiser</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spin Wheel Page -->
+    <div id="wheel-page" class="gameboy-shell" style="display: none;">
+        <div class="header" style="height: 160px; margin-left: 40px;">
+            <h1>YOU CHOSE:</h1>
+            <h2 id="selected-fighter">Incoming</h2>
+            <div class="battle-sub-header">Preparing for battle...</div>
+        </div>
+        <div class="wheel-container">
+            <div class="button-wheel">
+                <canvas id="wheel" width="300" height="300"></canvas>
+                <button class="spin-btn" id="spinBtn">SPIN!</button>
+            </div>
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script src="{{scriptUri}}"></script>
+</body>
