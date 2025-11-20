@@ -1,4 +1,9 @@
+import { resolveAllConflicts } from './utils';
+import { MergeOption, GameOption } from './types';
 import * as vscode from 'vscode';
+
+
+
 
 export function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidOpenTextDocument((doc) => {
@@ -18,6 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
 function hasMergeConflict(text: string): boolean {
     return text.includes('<<<<<<<') && text.includes('=======');
 }
+
 
 function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocument) {
     const panel = vscode.window.createWebviewPanel(
@@ -43,9 +49,9 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
         <body>
             <div id="main" class="active">
                 <h2>Conflict Crashout</h2>
-                <button id="currentBtn">Current Changes</button>
-                <button id="incomingBtn">Incoming Changes</button>
-                <button id="combinationBtn">Combination</button>
+                <button id="currentBtn">${MergeOption.Current}</button>
+                <button id="incomingBtn">${MergeOption.Incoming}</button>
+                <button id="combinationBtn">${MergeOption.Combination}</button>
             </div>
             <div id="wheelScreen">
                 <h2 id="chosenOption"></h2>
@@ -58,15 +64,25 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
             </div>
             <script>
                 const vscode = acquireVsCodeApi();
+                let winnerFromExtension = null;
+                let userChoiceFromExtension = null;
+                let opponentFromExtension = null;
+                // Spinner game options as enum values
+                const GameOption = {
+                    SurpriseEasy: '${GameOption.SurpriseEasy}',
+                    MathFun: '${GameOption.MathFun}',
+                    TypingSpeed: '${GameOption.TypingSpeed}',
+                    Matching: '${GameOption.Matching}'
+                };
                 // Option selection
                 document.getElementById('currentBtn').onclick = () => {
-                    vscode.postMessage({ command: 'resolve', option: 'Current Changes' });
+                    vscode.postMessage({ command: 'resolve', option: '${MergeOption.Current}' });
                 };
                 document.getElementById('incomingBtn').onclick = () => {
-                    vscode.postMessage({ command: 'resolve', option: 'Incoming Changes' });
+                    vscode.postMessage({ command: 'resolve', option: '${MergeOption.Incoming}' });
                 };
                 document.getElementById('combinationBtn').onclick = () => {
-                    vscode.postMessage({ command: 'resolve', option: 'Combination' });
+                    vscode.postMessage({ command: 'resolve', option: '${MergeOption.Combination}' });
                 };
                 // Listen for message from extension
                 window.addEventListener('message', function(event) {
@@ -75,11 +91,19 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
                         document.getElementById('main').classList.remove('active');
                         document.getElementById('wheelScreen').classList.add('active');
                         document.getElementById('chosenOption').textContent = 'You chose: ' + message.option;
+                        winnerFromExtension = message.winner;
+                        userChoiceFromExtension = message.option;
+                        opponentFromExtension = message.opponent;
                         drawWheel();
                     }
                 });
-                // Simple spin-the-wheel logic
-                const wheelOptions = ['Win!', 'Try Again', 'Bonus', 'Merge Success', 'Oops!'];
+                // Spinner uses enum values
+                const wheelOptions = [
+                    GameOption.SurpriseEasy,
+                    GameOption.MathFun,
+                    GameOption.TypingSpeed,
+                    GameOption.Matching
+                ];
                 let spinning = false;
                 function drawWheel() {
                     const canvas = document.getElementById('wheel');
@@ -98,7 +122,7 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
                         ctx.rotate((i + 0.5) * arc);
                         ctx.textAlign = 'right';
                         ctx.fillStyle = '#fff';
-                        ctx.font = '20px sans-serif';
+                        ctx.font = '18px sans-serif';
                         ctx.fillText(wheelOptions[i], 120, 10);
                         ctx.restore();
                     }
@@ -116,8 +140,20 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
                         canvas.style.transform = 'rotate(' + angle + 'rad)';
                         if (speed < 0.01) {
                             clearInterval(anim);
-                            let idx = Math.floor(((2 * Math.PI - (angle % (2 * Math.PI))) / (2 * Math.PI)) * wheelOptions.length) % wheelOptions.length;
-                            document.getElementById('result').textContent = 'Result: ' + wheelOptions[idx];
+                            // Randomly select a game option
+                            const idx = Math.floor(Math.random() * wheelOptions.length);
+                            const selectedGame = wheelOptions[idx];
+                            document.getElementById('result').textContent = 'Game: ' + selectedGame + ' ... Winner: ' + winnerFromExtension;
+                            // Call a function based on the selected game
+                            if (selectedGame === GameOption.SurpriseEasy) {
+                                // playSurpriseEasyGame(userChoiceFromExtension, opponentFromExtension, winnerFromExtension);
+                            } else if (selectedGame === GameOption.MathFun) {
+                                // playMathFunGame(userChoiceFromExtension, opponentFromExtension, winnerFromExtension);
+                            } else if (selectedGame === GameOption.TypingSpeed) {
+                                // playTypingSpeedGame(userChoiceFromExtension, opponentFromExtension, winnerFromExtension);
+                            } else if (selectedGame === GameOption.Matching) {
+                                // playMatchingGame(userChoiceFromExtension, opponentFromExtension, winnerFromExtension);
+                            }
                             spinning = false;
                         }
                     }, 16);
@@ -130,15 +166,36 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
     panel.webview.onDidReceiveMessage(
         async message => {
             if (message.command === 'resolve') {
-                // Switch to wheel screen and show the chosen option
-                panel.webview.postMessage({ command: 'showWheel', option: message.option });
-                vscode.window.showInformationMessage(`Spin the wheel for: ${message.option}`);
-                // TODO: Actually parse and apply the chosen resolution after the game
+                // Store user choice as enum
+                const userChoice: MergeOption = message.option as MergeOption;
+                const options = [MergeOption.Current, MergeOption.Incoming, MergeOption.Combination];
+                const opponent = chooseRandomOpponent(options, userChoice);
+                const winner = chooseWeightedWinner(userChoice, opponent);
+                // Switch to wheel screen and show the chosen option, and send winner and opponent
+                panel.webview.postMessage({ command: 'showWheel', option: userChoice, opponent, winner });
+                // After the game, resolve all conflicts with the winner
+                // Uncomment the next line to auto-resolve after the game:
+                await resolveAllConflicts(doc, winner);
             }
         },
         undefined,
         context.subscriptions
     );
+}
+
+
+// Randomly choose one of the two options not picked by the user
+function chooseRandomOpponent(options: MergeOption[], userChoice: MergeOption): MergeOption {
+    const opponents = options.filter(opt => opt !== userChoice);
+    const randomIndex = Math.floor(Math.random() * opponents.length);
+    return opponents[randomIndex];
+}
+
+// Choose between user and opponent, with more weight on the opponent
+function chooseWeightedWinner(userChoice: MergeOption, opponent: MergeOption): MergeOption {
+    const weighted: MergeOption[] = [userChoice, opponent, opponent]; // 2x weight for opponent
+    const randomIndex = Math.floor(Math.random() * weighted.length);
+    return weighted[randomIndex];
 }
 
 export function deactivate() {}
