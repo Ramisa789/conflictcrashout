@@ -27,7 +27,7 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
-    "postcompile": "copy src\\buggyProblems.json out\\buggyProblems.json",
+    "postcompile": "copy src\\code_syntax_game\\buggyProblems.json out\\buggyProblems.json",
     "watch": "tsc -watch -p ./"
   },
   "devDependencies": {
