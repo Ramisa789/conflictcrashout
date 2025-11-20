@@ -141,6 +141,10 @@ document.getElementById('closeBtnLose').addEventListener('click', () => {
     vscode.postMessage({ command: 'closeExtension' });
 });
 
+document.getElementById('iconBtn').addEventListener('click', () => {
+    vscode.postMessage({ command: 'closeExtension' });
+});
+
 // ==== MATH GAME ====
 
 window.addEventListener('message', function(event) {
