@@ -163,7 +163,7 @@ async function getHtmlForWebview(
         .replace("{{iconBomb}}", iconBomb.toString())
         .replace(/{{iconYou}}/g, iconYou.toString())
         .replace(/{{iconOpponent}}/g, iconOpponent.toString())
-        .replace("{{iconExit}}", iconExit.toString())
+        .replace(/{{iconExit}}/g, iconExit.toString())
         .replace("{{iconSkull}}", iconSkull.toString())
         .replace("{{fontJersey10}}", jersey10Uri.toString())
         .replace("{{fontJetBrains}}", jetBrainsUri.toString());
