@@ -71,5 +71,96 @@
         </div>
     </div>
 
+    <!-- Game Pages -->
+    <div id="page-coding" style="display:none;">
+        <div class="game-page" >
+       <h1 class="game-name">CODING CRAZE</h1>
+       <div class="player-boxes">
+        <div class="player">
+            <img src="{{iconYou}}" height="50px" />
+            <span class="player-text">YOU</span>
+            <!-- player progress/lives go here -->
+            <div></div>
+        </div>
+        <div class="opponent">
+            <img src="{{iconOpponent}}" height="50px" />
+            <span class="player-text">OPPONENT</span>
+            <!-- player progress/lives go here -->
+            <div></div>
+        </div>
+       </div>
+       <div class="game-box">
+        <!-- GAME GOES HERE -->
+       </div>
+    </div>
+    </div>
+    <div id="page-math" style="display:none;">
+        <div class="game-page" >
+        <h1 class="game-name">QUICK MATH</h1>
+       <div class="player-boxes">
+        <div class="player">
+            <img src="{{iconYou}}" height="50px"/>
+            <span class="player-text">YOU</span>
+            <!-- player progress/lives go here -->
+            <div></div>
+        </div>
+        <div class="opponent">
+            <img src="{{iconOpponent}}" height="50px"/>
+            <span class="player-text">OPPONENT</span>
+            <!-- player progress/lives go here -->
+            <div></div>
+        </div>
+       </div>
+       <div class="game-box">
+        <!-- GAME GOES HERE -->
+       </div>
+        </div>
+    </div>
+    <div id="page-typing" style="display:none;">
+        <div class="game-page" >
+        <h1 class="game-name">TYPING RACE</h1>
+       <div class="player-boxes">
+        <div class="player">
+            <img src="{{iconYou}}" height="50px" />
+            <span class="player-text">YOU</span>
+            <!-- player progress/lives go here -->
+            <div></div>
+        </div>
+        <div class="opponent">
+            <img src="{{iconOpponent}}" height="50px" />
+            <span class="player-text">OPPONENT</span>
+            <!-- player progress/lives go here -->
+            <div></div>
+        </div>
+       </div>
+       <div class="game-box">
+        <!-- GAME GOES HERE -->
+       </div>
+    </div>
+    </div>
+
+    <!-- NEED TO MAKE THESE HIDDEN AND LOGIC TO DISPLAY THEM LATER -->
+    <div id="page-win" class="win-lose">
+        <img src="{{iconYou}}" height="150px"/>
+        <h1 class="win-lose-text">YOU</h1>
+        <h1 class="bottom-text">WIN!</h1>
+        <h3 class="applying">Applying Changes...</h3>
+        <button id="closeBtnWin" class="exit-btn">
+            <img src="{{iconExit}}" style="margin-right: 10px;" height="30px"/>
+            <span>EXIT</span>
+        </button>
+    </div>
+
+    <div id="page-lose" class="win-lose">
+        <img src="{{iconSkull}}" height="150px"/>
+        <h1 class="win-lose-text">GAME</h1>
+        <h1 class="bottom-text">OVER</h1>
+        <h3 class="applying">Applying Changes...</h3>
+        <button id="closeBtnLose" class="exit-btn">
+            <img src="{{iconExit}}" style="margin-right: 10px;" height="30px"/>
+            <span>EXIT</span>
+        </button>
+    </div>
+    
     <script src="{{scriptUri}}"></script>
 </body>

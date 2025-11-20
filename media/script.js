@@ -1,12 +1,14 @@
 const vscode = acquireVsCodeApi();
-const wheelOptions = ['Coding Craze', 'Quick Math', 'Typing Race'];
-const segmentColors = ['#FFFFFF', '#FCD8CC', '#E2817B']; // 3 different colors
+const wheelOptions = ['Quick Math', 'Typing Race', 'Coding Craze'];
+const segmentColors = ['#FFFFFF', '#FCD8CC', '#E2817B']; // 3 colors
 let spinning = false;
+let selectedOption = null;
 
 // Fighter selection
 document.querySelectorAll('.fighter-option').forEach(fighter => {
     fighter.addEventListener('click', () => {
         const option = fighter.dataset.option;
+        selectedOption = option;
 
         // Send message to extension
         vscode.postMessage({ command: 'resolve', option });
@@ -21,40 +23,29 @@ document.querySelectorAll('.fighter-option').forEach(fighter => {
     });
 });
 
-// Listen for messages from extension (optional)
-window.addEventListener('message', event => {
-    const message = event.data;
-    if (message.command === 'showWheel') {
-        console.log('Option chosen:', message.option);
-        // Could update diff page dynamically
-    }
-});
-
 // Draw the wheel
-function drawWheel() {
+function drawWheel(rotation = 0) {
     const canvas = document.getElementById('wheel');
     const ctx = canvas.getContext('2d');
     const num = wheelOptions.length;
     const arc = 2 * Math.PI / num;
-    const center = 150; // center of the canvas
-    const radius = 140; // wheel radius
+    const center = 150;
+    const radius = 140;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw segments
     for (let i = 0; i < num; i++) {
         ctx.beginPath();
         ctx.moveTo(center, center);
-        ctx.arc(center, center, radius, i * arc, (i + 1) * arc);
+        ctx.arc(center, center, radius, i * arc + rotation, (i + 1) * arc + rotation);
         ctx.closePath();
-        // Use distinct color for each segment
         ctx.fillStyle = segmentColors[i];
         ctx.fill();
 
-        // Draw text on each segment
+        // Text
         ctx.save();
         ctx.translate(center, center);
-        ctx.rotate((i + 0.5) * arc);
+        ctx.rotate((i + 0.5) * arc + rotation);
         ctx.textAlign = 'right';
         ctx.fillStyle = '#1E1E1E';
         ctx.font = '20px "Jersey 10"';
@@ -62,38 +53,71 @@ function drawWheel() {
         ctx.restore();
     }
 
-    // Draw outer outline around the entire wheel
+    // Outer outline
     ctx.beginPath();
     ctx.arc(center, center, radius, 0, 2 * Math.PI);
-    ctx.lineWidth = 2;           // thickness of the outline
-    ctx.strokeStyle = '#1E1E1E'; // color of the outline
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#1E1E1E';
     ctx.stroke();
 }
 
+// Ease-out function for smooth spin
+function easeOut(t) {
+    return 1 - Math.pow(1 - t, 3);
+}
 
-// Spin logic
+// Spin button
 document.getElementById('spinBtn').addEventListener('click', () => {
     if (spinning) return;
     spinning = true;
 
-    const canvas = document.getElementById('wheel');
-    let angle = 0;
-    let speed = Math.random() * 0.2 + 0.3;
-    let decel = 0.995;
+    const spins = Math.floor(Math.random() * 5) + 5; // full rotations
+    const chosenIndex = Math.floor(Math.random() * wheelOptions.length);
+    const arc = 2 * Math.PI / wheelOptions.length;
+    const endRotation = spins * 2 * Math.PI + chosenIndex * arc + arc / 2;
+    const duration = 3000;
+    const startTime = performance.now();
 
-    const anim = setInterval(() => {
-        angle += speed;
-        speed *= decel;
-        canvas.style.transform = 'rotate(' + angle + 'rad)';
-
-        if (speed < 0.01) {
-            clearInterval(anim);
-            const idx = Math.floor(((2 * Math.PI - (angle % (2 * Math.PI))) / (2 * Math.PI)) * wheelOptions.length) % wheelOptions.length;
-            document.getElementById('result').textContent = 'Result: ' + wheelOptions[idx];
-            vscode.postMessage({ command: 'finishResult', result: wheelOptions[idx] });
+    function animate(now) {
+        const t = (now - startTime) / duration;
+        if (t >= 1) {
             spinning = false;
+            drawWheel(endRotation);
+            showGamePage(chosenIndex);
+            return;
         }
-    }, 16);
+        const eased = easeOut(t) * endRotation;
+        drawWheel(eased);
+        requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
+});
+
+// Show game page based on chosen index
+function showGamePage(index) {
+    const pages = ['page-coding', 'page-typing', 'page-math'];
+    pages.forEach((id, i) => {
+        document.getElementById(id).style.display = i === index ? 'block' : 'none';
+    });
+
+    document.getElementById('wheel-page').style.display = 'none';
+
+    // Update selected fighter
+    const selectedFighter = document.getElementById('selected-fighter');
+    if (selectedFighter) selectedFighter.textContent = wheelOptions[index];
+
+    // Notify extension
+    vscode.postMessage({ command: 'finishResult', result: wheelOptions[index], option: selectedOption });
+}
+
+// Close extension buttons
+document.getElementById('closeBtnWin').addEventListener('click', () => {
+    vscode.postMessage({ command: 'closeExtension' });
+});
+
+document.getElementById('closeBtnLose').addEventListener('click', () => {
+    vscode.postMessage({ command: 'closeExtension' });
 });
 
 // ==== MATH GAME ====
