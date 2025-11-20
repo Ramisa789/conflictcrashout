@@ -2,11 +2,13 @@ const vscode = acquireVsCodeApi();
 const wheelOptions = ['Quick Math', 'Typing Race', 'Coding Craze'];
 const segmentColors = ['#FFFFFF', '#FCD8CC', '#E2817B']; // 3 colors
 let spinning = false;
+let selectedOption = null;
 
 // Fighter selection
 document.querySelectorAll('.fighter-option').forEach(fighter => {
     fighter.addEventListener('click', () => {
         const option = fighter.dataset.option;
+        selectedOption = option;
 
         // Send message to extension
         vscode.postMessage({ command: 'resolve', option });
@@ -106,7 +108,7 @@ function showGamePage(index) {
     if (selectedFighter) selectedFighter.textContent = wheelOptions[index];
 
     // Notify extension
-    vscode.postMessage({ command: 'finishResult', result: wheelOptions[index] });
+    vscode.postMessage({ command: 'finishResult', result: wheelOptions[index], option: selectedOption });
 }
 
 // Close extension buttons
