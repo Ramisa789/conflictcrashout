@@ -18,11 +18,7 @@ const allProblems: BuggyProblem[] = JSON.parse(fs.readFileSync(problemsPath, 'ut
 
 // Track progress in memory
 let currentProblemIndex = 0;
-
-// --- Merge conflict detection ---
-function hasMergeConflict(text: string): boolean {
-    return text.includes('<<<<<<<') && text.includes('=======');
-}
+let problemPanel: vscode.WebviewPanel | null = null;
 
 // --- TypeScript compilation ---
 function compileTypeScript(code: string): { success: boolean; js?: string; error?: string } {
@@ -75,11 +71,19 @@ function runUserTests(jsCode: string, testCases: { input: any[]; expected: any }
     }
 }
 
-// --- Creates HTML for the problem ---
-function createProblemHTML(problem: BuggyProblem): string {
+function createProblemHTML(problem: BuggyProblem, userChoice?: string, opponent?: string, winner?: string): string {
     const exampleHTML = problem.testCases
         .map(tc => `<pre>Input: ${JSON.stringify(tc.input)}, Expected: ${JSON.stringify(tc.expected)}</pre>`)
         .join('');
+
+    // Display user and opponent names and stars
+    const playerInfoHTML = userChoice && opponent
+        ? `<div>
+            <strong>You:</strong> ${userChoice} <span id="userStars">★★★</span>
+            &nbsp;&nbsp;
+            <strong>Opponent:</strong> ${opponent} <span id="opponentStars">★★★</span>
+          </div>`
+        : '';
 
     return `
 <html>
@@ -94,6 +98,7 @@ button { margin-top: 10px; padding: 8px 16px; font-size: 16px; }
 </head>
 <body>
 <h2>Fix the Code Challenge!</h2>
+${playerInfoHTML}
 <p><strong>Problem ${problem.id}:</strong> ${problem.title}</p>
 <p>${problem.description}</p>
 
@@ -110,6 +115,10 @@ ${exampleHTML}
 <script>
 const vscode = acquireVsCodeApi();
 
+// Initial stars
+let userStars = 3;
+let opponentStars = 3;
+
 document.getElementById('compileBtn').onclick = () => {
     const code = document.getElementById('userCode').value;
     vscode.postMessage({ command: 'runCode', code });
@@ -119,6 +128,27 @@ document.getElementById('testBtn').onclick = () => {
     const code = document.getElementById('userCode').value;
     vscode.postMessage({ command: 'runTests', code });
 };
+
+// Animate stars loss
+function animateStars(winner) {
+    const userSpan = document.getElementById('userStars');
+    const opponentSpan = document.getElementById('opponentStars');
+
+    const interval = setInterval(() => {
+        if (winner === '${userChoice}') {
+            if (opponentStars > 0) opponentStars -= 1;
+            if (userStars > 0) userStars -= 0.2;
+        } else {
+            if (userStars > 0) userStars -= 1;
+            if (opponentStars > 0) opponentStars -= 0.2;
+        }
+
+        userSpan.textContent = '★'.repeat(Math.ceil(userStars));
+        opponentSpan.textContent = '★'.repeat(Math.ceil(opponentStars));
+
+        if (userStars <= 0 && opponentStars <= 0) clearInterval(interval);
+    }, 1000); // adjust speed here
+}
 
 window.addEventListener('message', event => {
     const message = event.data;
@@ -130,7 +160,9 @@ window.addEventListener('message', event => {
 
     if (message.command === 'testResult') {
         if (message.success) {
-            document.getElementById('status').textContent = '🎉 All tests passed! Loading next problem...';
+            // Trigger star animation based on winner
+            animateStars('${winner}');
+            vscode.postMessage({ command: 'nextProblem' });
         } else {
             document.getElementById('status').textContent = message.error;
         }
@@ -142,29 +174,14 @@ window.addEventListener('message', event => {
 `;
 }
 
-// --- Webview panel instance ---
-let problemPanel: vscode.WebviewPanel | null = null;
 
-// --- Load problem into existing panel ---
-function loadProblemIntoWebview() {
-    if (!problemPanel) return;
-
-    if (currentProblemIndex >= allProblems.length) {
-        problemPanel.webview.html = `
-            <h1>🎉 You solved all problems!</h1>
-            <p>Great job!</p>
-        `;
-        return;
-    }
-
-    const problem = allProblems[currentProblemIndex];
-    problemPanel.webview.html = createProblemHTML(problem);
-}
-
-// --- Open webview and start first problem ---
-function openBuggyProblemWebview(context: vscode.ExtensionContext) {
+// --- Exported function to play the SurpriseEasy game ---
+export function playSurpriseEasyGame(
+    userChoice: string,
+    opponent: string,
+    winner: string
+) {
     currentProblemIndex = 0;
-
     problemPanel = vscode.window.createWebviewPanel(
         'buggyProblem',
         'Fix the Code Challenge',
@@ -172,26 +189,16 @@ function openBuggyProblemWebview(context: vscode.ExtensionContext) {
         { enableScripts: true }
     );
 
-    loadProblemIntoWebview();
+    const problem = allProblems[currentProblemIndex];
+    problemPanel.webview.html = createProblemHTML(problem, userChoice, opponent, winner);
 
     problemPanel.webview.onDidReceiveMessage(
-        message => {
-            const problem = allProblems[currentProblemIndex];
-
+        async message => {
             if (message.command === 'runCode') {
                 const compiled = compileTypeScript(message.code);
-                if (!compiled.success) {
-                    problemPanel!.webview.postMessage({
-                        command: 'syntaxResult',
-                        success: false,
-                        error: compiled.error
-                    });
-                    return;
-                }
-                const runResult = runUserCode(compiled.js!);
                 problemPanel!.webview.postMessage({
                     command: 'syntaxResult',
-                    ...runResult
+                    ...compiled.success ? runUserCode(compiled.js!) : { success: false, error: compiled.error }
                 });
             }
 
@@ -209,9 +216,12 @@ function openBuggyProblemWebview(context: vscode.ExtensionContext) {
                 const result = runUserTests(compiled.js!, problem.testCases);
 
                 if (result.success) {
-                    // Move to next problem
                     currentProblemIndex++;
-                    loadProblemIntoWebview();
+                    if (currentProblemIndex < allProblems.length) {
+                        problemPanel!.webview.html = createProblemHTML(allProblems[currentProblemIndex], userChoice, opponent, winner);
+                    } else {
+                        problemPanel!.webview.html = `<h1>🎉 You solved all problems!</h1>`;
+                    }
                 }
 
                 problemPanel!.webview.postMessage({
@@ -221,23 +231,15 @@ function openBuggyProblemWebview(context: vscode.ExtensionContext) {
             }
         },
         undefined,
-        context.subscriptions
+        []
     );
 }
 
-// --- Activation ---
-export function activate(context: vscode.ExtensionContext) {
-    vscode.workspace.onDidOpenTextDocument(async (doc) => {
-        if (hasMergeConflict(doc.getText())) {
-            const selection = await vscode.window.showInformationMessage(
-                'Merge conflict detected! Solve a coding problem to continue?',
-                'Play'
-            );
-            if (selection === 'Play') {
-                openBuggyProblemWebview(context);
-            }
-        }
-    });
+// --- Function to handle messages from the spinner webview ---
+export function handleGameMessage(message: any) {
+    const { game, userChoice, opponent, winner } = message;
+    if (game === 'SurpriseEasy') {
+        playSurpriseEasyGame(userChoice, opponent, winner);
+    }
+    // Add more cases here for other games like MathFun, TypingSpeed, Matching
 }
-
-export function deactivate() {}

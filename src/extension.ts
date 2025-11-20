@@ -146,7 +146,13 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
                             document.getElementById('result').textContent = 'Game: ' + selectedGame + ' ... Winner: ' + winnerFromExtension;
                             // Call a function based on the selected game
                             if (selectedGame === GameOption.SurpriseEasy) {
-                                // playSurpriseEasyGame(userChoiceFromExtension, opponentFromExtension, winnerFromExtension);
+                                vscode.postMessage({
+                                command: 'playGame',
+                                game: selectedGame,
+                                userChoice: userChoiceFromExtension,
+                                opponent: opponentFromExtension,
+                                winner: winnerFromExtension
+                            });
                             } else if (selectedGame === GameOption.MathFun) {
                                 // playMathFunGame(userChoiceFromExtension, opponentFromExtension, winnerFromExtension);
                             } else if (selectedGame === GameOption.TypingSpeed) {
@@ -176,6 +182,15 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
                 // After the game, resolve all conflicts with the winner
                 // Uncomment the next line to auto-resolve after the game:
                 await resolveAllConflicts(doc, winner);
+            }
+            if (message.command === 'playGame') {
+                if (message.game === GameOption.SurpriseEasy) {
+                    const { userChoice, opponent, winner } = message;
+                    // Import and call the function
+                    const gameModule = await import('./surprise_game/game'); // dynamic import
+                    gameModule.playSurpriseEasyGame(userChoice, opponent, winner);
+                }
+                // Add other game types here if needed
             }
         },
         undefined,
