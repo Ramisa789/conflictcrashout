@@ -75,7 +75,7 @@ function generateQuestion3(): MathQuestion{
   let solution: number;
 
   expression = `x = ${a} * ${b}`;
-  solution = a + b;
+  solution = a * b;
 
   return { expression, solution };
 }
@@ -127,7 +127,7 @@ function generateQuestion5(): MathQuestion{
   return { expression, solution: Math.round(solution * 1000) / 1000 };
 }
 
-function generateQuestions(): MathQuestion[] {
+export function generateQuestions(): MathQuestion[] {
   const q1 = generateQuestion1();
   const q2 = generateQuestion2();
   const q3 = generateQuestion3();

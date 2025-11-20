@@ -1,12 +1,14 @@
 import { resolveAllConflicts } from './utils';
 import { MergeOption, GameOption } from './types';
 import * as vscode from 'vscode';
+import { generateQuestions } from './mathGame';
 
 
 
 
 export function activate(context: vscode.ExtensionContext) {
-    vscode.workspace.onDidOpenTextDocument((doc) => {
+    // Check all open text documents for merge conflicts on activation
+    const f = (doc: any) => {
         if (hasMergeConflict(doc.getText())) {
             vscode.window.showInformationMessage(
                 'Merge conflict detected! Play a game to resolve?',
@@ -17,7 +19,14 @@ export function activate(context: vscode.ExtensionContext) {
                 }
             });
         }
-    });
+    }
+    
+    vscode.workspace.textDocuments.forEach(f);
+
+    vscode.workspace.onDidSaveTextDocument(f)
+
+    // Also check when a new document is opened
+    vscode.workspace.onDidOpenTextDocument(f);
 }
 
 function hasMergeConflict(text: string): boolean {
@@ -37,8 +46,8 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
         <html>
         <head>
             <style>
-                #main, #wheelScreen { display: none; }
-                #main.active, #wheelScreen.active { display: block; }
+                #main, #wheelScreen, #mathScreen { display: none; }
+                #main.active, #wheelScreen.active, #mathScreen.active { display: block; }
                 #choice { margin-top: 20px; font-weight: bold; }
                 .wheel-container { margin: 40px auto; width: 300px; text-align: center; }
                 #wheel { width: 300px; height: 300px; border-radius: 50%; border: 8px solid #333; position: relative; overflow: hidden; }
@@ -60,6 +69,20 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
                     <canvas id="wheel" width="300" height="300"></canvas>
                     <button id="spinBtn">Spin the Wheel!</button>
                     <div id="result"></div>
+                </div>
+            </div>
+            <div id="mathScreen">
+                <h2>Solve:</h2>
+                <div class="math-container">
+                    <p id="mathLivesDebug"></p>
+                    <p id="mathOp1LivesDebug"></p>
+                    <p id="mathOp2LivesDebug"></p>
+                    <p id="mathWinner"></p>
+                    <p id="mathQuestionNum"></p>
+                    <h3 id="mathQuestion"></h3>
+                    <p id="mathError"></p>
+                    <input id="mathInput" />
+                    <button id="mathButton">Enter</button>
                 </div>
             </div>
             <script>
@@ -95,6 +118,140 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
                         userChoiceFromExtension = message.option;
                         opponentFromExtension = message.opponent;
                         drawWheel();
+                    }
+                    
+                    if (message.command === 'showMath') {
+                        var lives = 3;
+
+                        var opOneLives = 3;
+                        var opTwoLives = 3;
+
+                        document.getElementById('main').classList.remove('active');
+                        document.getElementById('mathScreen').classList.add('active');
+
+                        let questions = [];
+                        if (message.winner == message.option) {
+                            questions = message.questions.slice(0, 4);
+                        } else {
+                            questions = message.questions;
+                        }
+                        
+                        var count = 0;
+                        var currentQuestion = questions[count];
+
+                        document.getElementById('mathLivesDebug').textContent = '[Debug] Lives ' + String(lives) + '/3';
+                        document.getElementById('mathOp1LivesDebug').textContent = '[Debug] Opponent 1 Lives ' + String(opOneLives) + '/3';
+                        document.getElementById('mathOp2LivesDebug').textContent = '[Debug] Opponent 2 Lives ' + String(opTwoLives) + '/3';
+
+                        document.getElementById('mathWinner').textContent = '[Debug] Player: ' + String(message.option) + ' Winner: ' + String(message.winner);
+
+                        document.getElementById('mathQuestionNum').textContent = '[Debug] Question ' + String(count + 1) + '/' + String(questions.length);
+
+                        // Display first question
+                        document.getElementById('mathQuestion').textContent = String(currentQuestion.expression);
+
+                        // Logic to decrease opponent lives
+                        let opOneInterval = null;
+                        let opTwoInterval = null;
+
+                        function getFailureMessage() {
+                            const messages = [
+                                "That was not even close...",
+                                "That answer was... creative.",
+                                "You might want to brush up on your math skills.",
+                                "At least you tried. I guess.",
+                                "Did you even try?",
+                                "That wasn't even that hard.",
+                                "Womp womp",
+                                "...Really?"
+                            ];
+                            return messages[Math.floor(Math.random() * messages.length)];
+                        }
+                        
+                        function showWinScreen() {
+                            clearInterval(opOneInterval);
+                            clearInterval(opTwoInterval);
+
+                            document.getElementById('mathQuestion').textContent = '[Debug] You Win!';
+
+                            document.getElementById('mathInput').style.display = 'none';
+                            document.getElementById('mathButton').style.display = 'none';
+                            document.getElementById('mathError').style.display = 'none';
+                        }
+
+                        function decreaseOpponentLives() {
+                            // Only decrease if player is supposed to win
+                            if (message.winner == message.option) {
+                                opOneInterval = setInterval(() => {
+                                    if (opOneLives > 0) {
+                                        opOneLives--;
+                                        document.getElementById('mathOp1LivesDebug').textContent = '[Debug] Opponent 1 Lives ' + String(opOneLives) + '/3';
+                                    }
+                                    if (opOneLives === 0 && opOneInterval) {
+                                        clearInterval(opOneInterval);
+                                    }
+
+                                    if (opOneLives === 0 && opTwoLives === 0) {
+                                        showWinScreen()
+                                    }
+                                }, 1000 + Math.random() * 1200);
+
+                                opTwoInterval = setInterval(() => {
+                                    if (opTwoLives > 0) {
+                                        opTwoLives--;
+                                        document.getElementById('mathOp2LivesDebug').textContent = '[Debug] Opponent 2 Lives ' + String(opTwoLives) + '/3';
+                                    }
+                                    if (opTwoLives === 0 && opTwoInterval) {
+                                        clearInterval(opTwoInterval);
+                                    }
+
+                                    if (opOneLives === 0 && opTwoLives === 0) {
+                                        showWinScreen()
+                                    }
+                                }, 1200 + Math.random() * 1000);
+                            }
+                        }
+
+                        decreaseOpponentLives();
+
+                        document.getElementById('mathButton').onclick = function() {
+                            document.getElementById('mathError').textContent = '';
+
+                            var inputVal = document.getElementById('mathInput').value;
+
+                            if (inputVal == currentQuestion.solution) {
+                                if (count < questions.length - 1) {
+                                    count++;
+                                    currentQuestion = questions[count];
+                                    document.getElementById('mathQuestionNum').textContent = '[Debug] Question ' + String(count + 1) + '/' + String(questions.length);
+                                    document.getElementById('mathQuestion').textContent = String(currentQuestion.expression);
+                                    document.getElementById('mathInput').value = '';
+                                    document.getElementById('mathError').textContent = '';
+                                } else {
+                                    showWinScreen()
+                                }
+                            } else {
+                                lives--;
+                                if (lives == 0) {
+                                    document.getElementById('mathQuestion').textContent = '[Debug] Game Over';
+
+                                    document.getElementById('mathInput').style.display = 'none';
+                                    document.getElementById('mathButton').style.display = 'none';
+                                    document.getElementById('mathError').style.display = 'none';
+
+                                    // Stop opponent timers
+                                    if (opOneInterval) clearInterval(opOneInterval);
+                                    if (opTwoInterval) clearInterval(opTwoInterval);
+
+                                } else {
+                                    document.getElementById('mathLivesDebug').textContent = '[Debug] Lives ' + String(lives) + '/3';
+                                    document.getElementById('mathInput').value = '';
+                                    document.getElementById('mathError').textContent = getFailureMessage();
+                                }
+                                
+                            }
+                        };
+
                     }
                 });
                 // Spinner uses enum values
@@ -172,7 +329,8 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
                 const opponent = chooseRandomOpponent(options, userChoice);
                 const winner = chooseWeightedWinner(userChoice, opponent);
                 // Switch to wheel screen and show the chosen option, and send winner and opponent
-                panel.webview.postMessage({ command: 'showWheel', option: userChoice, opponent, winner });
+                // panel.webview.postMessage({ command: 'showWheel', option: userChoice, opponent, winner });
+                playMathFunGame(userChoice, opponent, winner) // TODO: remove later
                 // After the game, resolve all conflicts with the winner
                 // Uncomment the next line to auto-resolve after the game:
                 await resolveAllConflicts(doc, winner);
@@ -181,6 +339,13 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
         undefined,
         context.subscriptions
     );
+
+    function playMathFunGame(userChoice: MergeOption, opponent: MergeOption, winner: MergeOption) {
+        const questions = generateQuestions()
+
+        panel.webview.postMessage({ command: 'showMath', option: userChoice, opponent, winner, questions});
+
+    }
 }
 
 
