@@ -194,7 +194,7 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
                                     if (opOneLives === 0 && opTwoLives === 0) {
                                         showWinScreen()
                                     }
-                                }, 1000 + Math.random() * 1200);
+                                }, 2000 + Math.random() * 3000);
 
                                 opTwoInterval = setInterval(() => {
                                     if (opTwoLives > 0) {
@@ -208,7 +208,7 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
                                     if (opOneLives === 0 && opTwoLives === 0) {
                                         showWinScreen()
                                     }
-                                }, 1200 + Math.random() * 1000);
+                                }, 2200 + Math.random() * 2000);
                             }
                         }
 
@@ -233,6 +233,8 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
                             } else {
                                 lives--;
                                 if (lives == 0) {
+                                    document.getElementById('mathLivesDebug').textContent = '[Debug] Lives ' + String(lives) + '/3';
+
                                     document.getElementById('mathQuestion').textContent = '[Debug] Game Over';
 
                                     document.getElementById('mathInput').style.display = 'none';
