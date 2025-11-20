@@ -3,7 +3,7 @@ import { resolveAllConflicts } from './utils';
 import { MergeOption } from './types';
 
 export function activate(context: vscode.ExtensionContext) {
-    vscode.workspace.onDidOpenTextDocument((doc) => {
+    const displayPopup = (doc: any) => {
         if (hasMergeConflict(doc.getText())) {
             vscode.window.showInformationMessage(
                 'Merge conflict detected! Play a game to resolve?',
@@ -14,7 +14,11 @@ export function activate(context: vscode.ExtensionContext) {
                 }
             });
         }
-    });
+    }
+    
+    vscode.workspace.textDocuments.forEach(displayPopup);
+    vscode.workspace.onDidSaveTextDocument(displayPopup);
+    vscode.workspace.onDidOpenTextDocument(displayPopup);
 }
 
 function hasMergeConflict(text: string): boolean {

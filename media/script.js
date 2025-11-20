@@ -95,3 +95,164 @@ document.getElementById('spinBtn').addEventListener('click', () => {
         }
     }, 16);
 });
+
+// ==== MATH GAME ====
+
+function getFailureMessage() {
+    const messages = [
+        "That was not even close...",
+        "That answer was... creative.",
+        "You might want to brush up on your math skills.",
+        "At least you tried. I guess.",
+        "Did you even try?",
+        "That wasn't even that hard.",
+        "Womp womp",
+        "...Really?"
+    ];
+    return messages[Math.floor(Math.random() * messages.length)];
+}
+
+function mathGameLogic(message) {
+    var lives = 3;
+
+    var opOneLives = 3;
+    var opTwoLives = 3;
+
+    document.getElementById('main').classList.remove('active');
+    document.getElementById('mathScreen').classList.add('active');
+
+    let questions = [];
+    if (message.winner == message.option) {
+        message.questions.splice(4, 1);
+        questions = message.questions
+    } else {
+        questions = message.questions.slice(0, 5);
+    }
+    
+    var count = 0;
+    var currentQuestion = questions[count];
+
+    document.getElementById('mathLivesDebug').textContent = '[Debug] Lives ' + String(lives) + '/3';
+    document.getElementById('mathOp1LivesDebug').textContent = '[Debug] Opponent 1 Lives ' + String(opOneLives) + '/3';
+    document.getElementById('mathOp2LivesDebug').textContent = '[Debug] Opponent 2 Lives ' + String(opTwoLives) + '/3';
+
+    document.getElementById('mathWinner').textContent = '[Debug] Player: ' + String(message.option) + ' Winner: ' + String(message.winner);
+
+    document.getElementById('mathQuestionNum').textContent = '[Debug] Question ' + String(count + 1) + '/' + String(questions.length);
+
+    // Display first question
+    document.getElementById('mathQuestion').textContent = String(currentQuestion.expression);
+
+    // Logic to decrease opponent lives
+    let opOneInterval = null;
+    let opTwoInterval = null;
+    
+    function showWinScreen() {
+        clearInterval(opOneInterval);
+        clearInterval(opTwoInterval);
+
+        document.getElementById('mathQuestion').textContent = '[Debug] You Win!';
+
+        document.getElementById('mathInput').style.display = 'none';
+        document.getElementById('mathButton').style.display = 'none';
+        document.getElementById('mathError').style.display = 'none';
+    }
+
+    function decreaseOpponentLives() {
+        // Only decrease to 0 if player is supposed to win
+        if (message.winner == message.option) {
+            opOneInterval = setInterval(() => {
+                if (opOneLives > 0) {
+                    opOneLives--;
+                    document.getElementById('mathOp1LivesDebug').textContent = '[Debug] Opponent 1 Lives ' + String(opOneLives) + '/3';
+                }
+                if (opOneLives === 0 && opOneInterval) {
+                    clearInterval(opOneInterval);
+                }
+
+                if (opOneLives === 0 && opTwoLives === 0) {
+                    showWinScreen()
+                }
+            }, 2000 + Math.random() * 3000);
+
+            opTwoInterval = setInterval(() => {
+                if (opTwoLives > 0) {
+                    opTwoLives--;
+                    document.getElementById('mathOp2LivesDebug').textContent = '[Debug] Opponent 2 Lives ' + String(opTwoLives) + '/3';
+                }
+                if (opTwoLives === 0 && opTwoInterval) {
+                    clearInterval(opTwoInterval);
+                }
+
+                if (opOneLives === 0 && opTwoLives === 0) {
+                    showWinScreen()
+                }
+            }, 2200 + Math.random() * 2000);
+        } else {
+            // slowly decrease the timers for realism, but never go to zero
+            opOneInterval = setInterval(() => {
+                if (opOneLives > 0) {
+                    opOneLives--;
+                    document.getElementById('mathOp1LivesDebug').textContent = '[Debug] Opponent 1 Lives ' + String(opOneLives) + '/3';
+                }
+                if (opOneLives === 1 && opOneInterval) {
+                    clearInterval(opOneInterval);
+                }
+            }, 5000 + Math.random() * 3000);
+
+            opTwoInterval = setInterval(() => {
+                if (opTwoLives > 0) {
+                    opTwoLives--;
+                    document.getElementById('mathOp2LivesDebug').textContent = '[Debug] Opponent 2 Lives ' + String(opTwoLives) + '/3';
+                }
+                if (opTwoLives === 1 && opTwoInterval) {
+                    clearInterval(opTwoInterval);
+                }
+            }, 6000 + Math.random() * 2000);
+        }
+    }
+
+    decreaseOpponentLives();
+
+    document.getElementById('mathButton').onclick = function() {
+        document.getElementById('mathError').textContent = '';
+
+        var inputVal = document.getElementById('mathInput').value;
+
+        if (inputVal == currentQuestion.solution) {
+            if (count < questions.length - 1) {
+                count++;
+                currentQuestion = questions[count];
+                document.getElementById('mathQuestionNum').textContent = '[Debug] Question ' + String(count + 1) + '/' + String(questions.length);
+                document.getElementById('mathQuestion').textContent = String(currentQuestion.expression);
+                document.getElementById('mathInput').value = '';
+                document.getElementById('mathError').textContent = '';
+            } else {
+                showWinScreen()
+            }
+        } else {
+            lives--;
+            if (lives == 0) {
+                document.getElementById('mathLivesDebug').textContent = '[Debug] Lives ' + String(lives) + '/3';
+
+                document.getElementById('mathQuestion').textContent = '[Debug] Game Over';
+
+                document.getElementById('mathInput').style.display = 'none';
+                document.getElementById('mathButton').style.display = 'none';
+                document.getElementById('mathError').style.display = 'none';
+
+                // Stop opponent timers
+                if (opOneInterval) clearInterval(opOneInterval);
+                if (opTwoInterval) clearInterval(opTwoInterval);
+
+            } else {
+                document.getElementById('mathLivesDebug').textContent = '[Debug] Lives ' + String(lives) + '/3';
+                document.getElementById('mathInput').value = '';
+                document.getElementById('mathError').textContent = getFailureMessage();
+            }
+            
+        }
+    };
+}
+
+// ==== MATH GAME END ====
