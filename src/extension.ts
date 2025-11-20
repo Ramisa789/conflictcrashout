@@ -33,6 +33,11 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
         { enableScripts: true }
     );
 
+    // Get the URI for typing_game.html for the webview
+    const typingGameHtmlUri = panel.webview.asWebviewUri(
+        vscode.Uri.joinPath(context.extensionUri, 'src', 'media', 'typing_game.html')
+    );
+
     panel.webview.html = `
         <html>
         <head>
@@ -53,14 +58,11 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
                 <button id="incomingBtn">${MergeOption.Incoming}</button>
                 <button id="combinationBtn">${MergeOption.Combination}</button>
             </div>
-            <div id="wheelScreen">
-                <h2 id="chosenOption"></h2>
-                <div class="wheel-container">
-                    <div id="pointer"></div>
-                    <canvas id="wheel" width="300" height="300"></canvas>
-                    <button id="spinBtn">Spin the Wheel!</button>
-                    <div id="result"></div>
-                </div>
+            <div id="typingGameContainer" style="display:none; width:100%; height:400px;">
+                <iframe id="typingGameFrame" src="${typingGameHtmlUri}" style="width:100%; height:100%; border:none;"></iframe>
+            </div>
+            <div id="typingGameContainer" style="display:none; width:100%; height:400px;">
+                <iframe id="typingGameFrame" src="${typingGameHtmlUri}" style="width:100%; height:100%; border:none;"></iframe>
             </div>
             <script>
                 const vscode = acquireVsCodeApi();
@@ -74,29 +76,29 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
                     TypingSpeed: '${GameOption.TypingSpeed}',
                     Matching: '${GameOption.Matching}'
                 };
-                // Option selection
-                document.getElementById('currentBtn').onclick = () => {
-                    vscode.postMessage({ command: 'resolve', option: '${MergeOption.Current}' });
-                };
-                document.getElementById('incomingBtn').onclick = () => {
-                    vscode.postMessage({ command: 'resolve', option: '${MergeOption.Incoming}' });
-                };
-                document.getElementById('combinationBtn').onclick = () => {
-                    vscode.postMessage({ command: 'resolve', option: '${MergeOption.Combination}' });
-                };
-                // Listen for message from extension
-                window.addEventListener('message', function(event) {
-                    var message = event.data;
-                    if (message.command === 'showWheel') {
-                        document.getElementById('main').classList.remove('active');
-                        document.getElementById('wheelScreen').classList.add('active');
-                        document.getElementById('chosenOption').textContent = 'You chose: ' + message.option;
-                        winnerFromExtension = message.winner;
-                        userChoiceFromExtension = message.option;
-                        opponentFromExtension = message.opponent;
-                        drawWheel();
-                    }
-                });
+                // Option selection: immediately start typing game
+                function startTypingGame(option) {
+                    // Simulate backend logic for opponent and winner
+                    const options = ['${MergeOption.Current}', '${MergeOption.Incoming}', '${MergeOption.Combination}'];
+                    const opponents = options.filter(opt => opt !== option);
+                    const opponent = opponents[Math.floor(Math.random() * opponents.length)];
+                    const weighted = [option, opponent, opponent];
+                    const winner = weighted[Math.floor(Math.random() * weighted.length)];
+                    // Hide main, show typing game
+                    document.getElementById('main').classList.remove('active');
+                    document.getElementById('typingGameContainer').style.display = 'block';
+                    // Pass values to the iframe
+                    const frame = document.getElementById('typingGameFrame');
+                    frame.contentWindow.postMessage({
+                        command: 'initTypingGame',
+                        winner: winner,
+                        userChoice: option,
+                        opponentChoice: opponent
+                    }, '*');
+                }
+                document.getElementById('currentBtn').onclick = () => startTypingGame('${MergeOption.Current}');
+                document.getElementById('incomingBtn').onclick = () => startTypingGame('${MergeOption.Incoming}');
+                document.getElementById('combinationBtn').onclick = () => startTypingGame('${MergeOption.Combination}');
                 // Spinner uses enum values
                 const wheelOptions = [
                     GameOption.SurpriseEasy,
@@ -142,7 +144,8 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
                             clearInterval(anim);
                             // Randomly select a game option
                             const idx = Math.floor(Math.random() * wheelOptions.length);
-                            const selectedGame = wheelOptions[idx];
+                            // const selectedGame = wheelOptions[idx];
+                            selectedGame = GameOption.TypingSpeed;
                             document.getElementById('result').textContent = 'Game: ' + selectedGame + ' ... Winner: ' + winnerFromExtension;
                             // Call a function based on the selected game
                             if (selectedGame === GameOption.SurpriseEasy) {
@@ -150,7 +153,13 @@ function openGameWebview(context: vscode.ExtensionContext, doc: vscode.TextDocum
                             } else if (selectedGame === GameOption.MathFun) {
                                 // playMathFunGame(userChoiceFromExtension, opponentFromExtension, winnerFromExtension);
                             } else if (selectedGame === GameOption.TypingSpeed) {
-                                // playTypingSpeedGame(userChoiceFromExtension, opponentFromExtension, winnerFromExtension);
+                                // Send message to start typing game with winner, userChoice, opponentChoice
+                                vscode.postMessage({
+                                    command: 'initTypingGame',
+                                    winner: winnerFromExtension,
+                                    userChoice: userChoiceFromExtension,
+                                    opponentChoice: opponentFromExtension
+                                });
                             } else if (selectedGame === GameOption.Matching) {
                                 // playMatchingGame(userChoiceFromExtension, opponentFromExtension, winnerFromExtension);
                             }

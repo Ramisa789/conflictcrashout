@@ -1,0 +1,15 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f9f9f9;
+  margin: 0;
+  padding: 40px;
+}
+#quote {
+  color: #333;
+}
+#typingBox {
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  padding: 8px;
+  box-sizing: border-box;
+}
