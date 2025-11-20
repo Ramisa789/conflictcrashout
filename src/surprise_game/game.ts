@@ -13,7 +13,7 @@ interface BuggyProblem {
 }
 
 // --- Load all problems once ---
-const problemsPath = path.join(__dirname, 'buggyProblems.json');
+const problemsPath = path.join(__dirname, 'code_problems.json');
 const allProblems: BuggyProblem[] = JSON.parse(fs.readFileSync(problemsPath, 'utf-8'));
 
 // Track progress in memory
