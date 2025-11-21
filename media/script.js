@@ -112,11 +112,8 @@ function showGamePage(index) {
     // pages.forEach((id, i) => {
     //     document.getElementById(id).style.display = i === index ? 'block' : 'none';
     // });
-    document.getElementById('page-typing').style.display = 'block'; //TODO: REMOVE LATER
-    if (wheelOptions[index] === 'Typing Race') {
-        startTypingGame();
-    }
-
+    document.getElementById('page-coding').style.display = 'block'; //TODO: REMOVE LATER
+    
     document.getElementById('wheel-page').style.display = 'none';
 
     // Update selected fighter
@@ -127,13 +124,13 @@ function showGamePage(index) {
     const options = ['Current Changes', 'Incoming Changes', 'Combination'];
     const opponent = chooseRandomOpponent(options, selectedOption);
     const winner = chooseWeightedWinner(selectedOption, opponent);
+    
+    // Start coding game with winner info
+    startCodingGame(winner, selectedOption);
 
     if (pages[index] == 'page-math') {
         vscode.postMessage({ command: 'playMathGame', option: selectedOption, winner })
     }
-
-    // Notify extension
-    vscode.postMessage({ command: 'finishResult', result: wheelOptions[index], option: selectedOption, winner });
 }
 
 // Close extension buttons
@@ -388,3 +385,136 @@ function startTypingGame() {
 }
 
 // ==== TYPING RACE GAME END ====
+
+// ==== CODING CRAZE GAME START ====
+function startCodingGame(winner, userChoice) {
+    let playerLives = 3;
+    let opponentLives = 3;
+    let opponentInterval = null;
+    
+    // Sample problem - in production this would come from the backend
+    const problem = {
+        id: 1,
+        title: "Sum of Two Numbers",
+        description: "Fix the syntax so the function returns the sum of two numbers.",
+        code: "function solution(a, b {\n    return a + b;\n}",
+        testCases: [
+            { input: [1, 2], expected: 3 },
+            { input: [5, 7], expected: 12 },
+            { input: [-1, 1], expected: 0 }
+        ]
+    };
+
+    // Display the problem
+    document.getElementById('codingTitle').textContent = problem.title;
+    document.getElementById('codingDescription').textContent = problem.description;
+    document.getElementById('codeInput').value = problem.code;
+    
+    // Display test cases
+    const testCasesDiv = document.getElementById('testCases');
+    testCasesDiv.innerHTML = problem.testCases
+        .map((tc, i) => `<p>Test ${i + 1}: Input: ${JSON.stringify(tc.input)}, Expected: ${JSON.stringify(tc.expected)}</p>`)
+        .join('');
+    
+    // Simulate opponent solving based on who should win
+    function simulateOpponent() {
+        if (winner === userChoice) {
+            // Player should win - opponent loses lives faster
+            opponentInterval = setInterval(() => {
+                if (opponentLives > 0) {
+                    opponentLives--;
+                    if (opponentLives === 0) {
+                        clearInterval(opponentInterval);
+                    }
+                }
+            }, 8000 + Math.random() * 4000);
+        } else {
+            // Opponent should win - slower life loss, stops at 1
+            opponentInterval = setInterval(() => {
+                if (opponentLives > 1) {
+                    opponentLives--;
+                }
+            }, 15000 + Math.random() * 5000);
+        }
+    }
+    
+    function showWinPage() {
+        if (opponentInterval) clearInterval(opponentInterval);
+        document.getElementById('page-coding').style.display = 'none';
+        document.getElementById('page-win').style.display = 'flex';
+        // Apply the winner's changes to resolve merge conflict
+        vscode.postMessage({ command: 'finishResult', result: 'win', winner: winner });
+    }
+    
+    function showLosePage() {
+        if (opponentInterval) clearInterval(opponentInterval);
+        document.getElementById('page-coding').style.display = 'none';
+        document.getElementById('page-lose').style.display = 'flex';
+        // Apply the winner's changes to resolve merge conflict
+        vscode.postMessage({ command: 'finishResult', result: 'lose', winner: winner });
+    }
+    
+    // Start opponent simulation
+    simulateOpponent();
+    
+    // Run Tests button
+    document.getElementById('runCodeBtn').onclick = function() {
+        const userCode = document.getElementById('codeInput').value;
+        const results = validateCode(userCode, problem.testCases);
+        
+        const resultsDiv = document.getElementById('codeResults');
+        resultsDiv.innerHTML = `<h3 style="font-family: 'Jersey 10'; font-size: 24px; color: #A12523;">Test Results (${results.passed}/${results.total} passed):</h3>`;
+        results.results.forEach(result => {
+            const p = document.createElement('p');
+            p.textContent = result;
+            p.style.color = result.startsWith('✓') ? '#2d7a2d' : '#A12523';
+            p.style.fontWeight = 'bold';
+            resultsDiv.appendChild(p);
+        });
+        
+        // Check win/lose conditions
+        if (results.passed === results.total) {
+            // All tests passed - check if opponent is out
+            if (opponentLives === 0) {
+                showWinPage();
+            }
+        } else {
+            // Tests failed - player loses a life
+            playerLives--;
+            if (playerLives === 0) {
+                showLosePage();
+            }
+        }
+    };
+}
+
+function validateCode(userCode, testCases) {
+    const results = [];
+    let passed = 0;
+    
+    try {
+        const wrappedCode = `${userCode}\nreturn solution;`;
+        const solutionFunc = new Function(wrappedCode)();
+        
+        testCases.forEach((testCase, i) => {
+            try {
+                const result = solutionFunc(...testCase.input);
+                const isCorrect = JSON.stringify(result) === JSON.stringify(testCase.expected);
+                
+                if (isCorrect) {
+                    passed++;
+                    results.push(`✓ Test ${i + 1} passed`);
+                } else {
+                    results.push(`✗ Test ${i + 1} failed: Expected ${JSON.stringify(testCase.expected)}, got ${JSON.stringify(result)}`);
+                }
+            } catch (err) {
+                results.push(`✗ Test ${i + 1} error: ${err.message}`);
+            }
+        });
+    } catch (err) {
+        results.push(`✗ Syntax error: ${err.message}`);
+    }
+    
+    return { passed, total: testCases.length, results };
+}
+// ==== CODING CRAZE GAME END ====
