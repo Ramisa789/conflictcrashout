@@ -4,6 +4,7 @@ const segmentColors = ['#FFFFFF', '#FCD8CC', '#E2817B']; // 3 colors
 let spinning = false;
 let selectedOption = null;
 
+
 // Fighter selection
 document.querySelectorAll('.fighter-option').forEach(fighter => {
     fighter.addEventListener('click', () => {
@@ -106,16 +107,30 @@ function chooseWeightedWinner(userChoice, opponent) {
     return weighted[randomIndex];
 }
 
+function showEndPageAndApplyChanges(game_id, winner) {
+    document.getElementById(game_id).style.display = 'none';
+    if (winner === selectedOption) {
+        document.getElementById('page-win').style.display = 'flex';
+    } else {
+        document.getElementById('page-lose').style.display = 'flex';
+        const loseApplying = document.querySelector('#page-lose .applying');
+        if (loseApplying) loseApplying.textContent = `Applying ${winner}...`;
+    }
+    
+    vscode.postMessage({ command: 'finishResult', result: 'Typing Racer', winner: winner, option: selectedOption});
+}
+
 // Show game page based on chosen index
 function showGamePage(index) {
     // const pages = ['page-coding', 'page-typing', 'page-math'];
     // pages.forEach((id, i) => {
     //     document.getElementById(id).style.display = i === index ? 'block' : 'none';
     // });
-    document.getElementById('page-typing').style.display = 'block'; //TODO: REMOVE LATER
-    if (wheelOptions[index] === 'Typing Race') {
-        startTypingGame();
-    }
+    // document.getElementById('page-typing').style.display = 'block'; //TODO: REMOVE LATER
+    document.getElementById('page-math').style.display = 'block'; //TODO: REMOVE LATER
+    // if (wheelOptions[index] === 'Typing Race') {
+    //     startTypingGame();
+    // }
 
     document.getElementById('wheel-page').style.display = 'none';
 
@@ -128,12 +143,12 @@ function showGamePage(index) {
     const opponent = chooseRandomOpponent(options, selectedOption);
     const winner = chooseWeightedWinner(selectedOption, opponent);
 
-    if (pages[index] == 'page-math') {
+    // if (pages[index] == 'page-math') {
         vscode.postMessage({ command: 'playMathGame', option: selectedOption, winner })
-    }
+    // }
 
     // Notify extension
-    vscode.postMessage({ command: 'finishResult', result: wheelOptions[index], option: selectedOption, winner });
+    // vscode.postMessage({ command: 'finishResult', result: wheelOptions[index], option: selectedOption, winner });
 }
 
 // Close extension buttons
@@ -155,7 +170,7 @@ window.addEventListener('message', function(event) {
     var message = event.data;
 
     if (message.command === 'displayMathGame') {
-        mathGameLogic(message.questions, message.option, message.winner);
+        mathGameLogic(message.questions, message.winner, message.option);
     }
 });
 
@@ -178,8 +193,7 @@ function mathGameLogic(generatedQuestions, winner, option) {
 
     var lives = 3;
 
-    var opOneLives = 3;
-    var opTwoLives = 3;
+    var opponentLives = 3;
 
     if (winner == option) {
         generatedQuestions.splice(4, 1);
@@ -191,83 +205,77 @@ function mathGameLogic(generatedQuestions, winner, option) {
     var count = 0;
     var currentQuestion = questions[count];
 
-    document.getElementById('mathLivesDebug').textContent = '[Debug] Lives ' + String(lives) + '/3';
-    document.getElementById('mathOp1LivesDebug').textContent = '[Debug] Opponent 1 Lives ' + String(opOneLives) + '/3';
-    document.getElementById('mathOp2LivesDebug').textContent = '[Debug] Opponent 2 Lives ' + String(opTwoLives) + '/3';
+    let opponentInterval = null;
 
-    document.getElementById('mathWinner').textContent = '[Debug] Player: ' + String(option) + ' Winner: ' + String(winner);
-
-    document.getElementById('mathQuestionNum').textContent = '[Debug] Question ' + String(count + 1) + '/' + String(questions.length);
-
-    // Display first question
-    document.getElementById('mathQuestion').textContent = String(currentQuestion.expression);
-
-    // Logic to decrease opponent lives
-    let opOneInterval = null;
-    let opTwoInterval = null;
-    
-    function showWinScreen() {
-        clearInterval(opOneInterval);
-        clearInterval(opTwoInterval);
-
-        document.getElementById('mathQuestion').textContent = '[Debug] You Win!';
-
-        document.getElementById('mathInput').style.display = 'none';
-        document.getElementById('mathButton').style.display = 'none';
-        document.getElementById('mathError').style.display = 'none';
+    function updateLivesDisplay() {
+        const heartIconSrc = document.getElementById('heartIconTemplate').src;
+        const playerHeartsHtml = `<img src="${heartIconSrc}" height="20px" style="margin: 2px;"/>`.repeat(lives);
+        const opponentHeartsHtml = `<img src="${heartIconSrc}" height="20px" style="margin: 2px;"/>`.repeat(opponentLives);
+        document.getElementById('playerLivesDisplayMath').innerHTML = playerHeartsHtml;
+        document.getElementById('opponentLivesDisplayMath').innerHTML = opponentHeartsHtml;
     }
 
+    function showWin() {
+        if (opponentInterval) clearInterval(opponentInterval);
+        document.getElementById('page-math').style.display = 'none';
+        document.getElementById('page-win').style.display = 'flex';
+
+        const loseApplying = document.querySelector('#page-lose .applying');
+        if (loseApplying) loseApplying.textContent = `Applying ${winner}...`;
+        
+        vscode.postMessage({ command: 'finishResult', result: 'Typing Racer', winner: winner, option: selectedOption});
+        // showEndPageAndApplyChanges(2, winner);
+        // document.getElementById('page-math').style.display = 'none';
+        // document.getElementById('page-win').style.display = 'flex';
+    }
+
+    function showLose() {
+        if (opponentInterval) clearInterval(opponentInterval);
+        document.getElementById('page-math').style.display = 'none';
+        document.getElementById('page-lose').style.display = 'flex';
+
+        const loseApplying = document.querySelector('#page-lose .applying');
+        if (loseApplying) loseApplying.textContent = `Applying ${winner}...`;
+
+        
+        vscode.postMessage({ command: 'finishResult', result: 'Quick Math', winner, option: selectedOption});
+        // showEndPageAndApplyChanges(2, winner);
+        
+        // document.getElementById('page-math').style.display = 'none';
+        // document.getElementById('page-lose').style.display = 'flex';
+    }
+
+    // Display first question
+    updateLivesDisplay();
+    document.getElementById('mathQuestion').textContent = String(currentQuestion.expression);
+    
     function decreaseOpponentLives() {
         // Only decrease to 0 if player is supposed to win
         if (winner == option) {
-            opOneInterval = setInterval(() => {
-                if (opOneLives > 0) {
-                    opOneLives--;
-                    document.getElementById('mathOp1LivesDebug').textContent = '[Debug] Opponent 1 Lives ' + String(opOneLives) + '/3';
+            opponentInterval = setInterval(() => {
+                if (opponentLives > 0) {
+                    opponentLives--;
+                    updateLivesDisplay();
                 }
-                if (opOneLives === 0 && opOneInterval) {
-                    clearInterval(opOneInterval);
+                if (opponentLives === 0 && opponentInterval) {
+                    clearInterval(opponentInterval);
                 }
 
-                if (opOneLives === 0 && opTwoLives === 0) {
-                    showWinScreen()
+                if (opponentLives === 0) {
+                    showWin()
                 }
             }, 2000 + Math.random() * 3000);
-
-            opTwoInterval = setInterval(() => {
-                if (opTwoLives > 0) {
-                    opTwoLives--;
-                    document.getElementById('mathOp2LivesDebug').textContent = '[Debug] Opponent 2 Lives ' + String(opTwoLives) + '/3';
-                }
-                if (opTwoLives === 0 && opTwoInterval) {
-                    clearInterval(opTwoInterval);
-                }
-
-                if (opOneLives === 0 && opTwoLives === 0) {
-                    showWinScreen();
-                }
-            }, 2200 + Math.random() * 2000);
         } else {
             // slowly decrease the timers for realism, but never go to zero
-            opOneInterval = setInterval(() => {
-                if (opOneLives > 0) {
-                    opOneLives--;
-                    document.getElementById('mathOp1LivesDebug').textContent = '[Debug] Opponent 1 Lives ' + String(opOneLives) + '/3';
+            opponentInterval = setInterval(() => {
+                if (opponentLives > 0) {
+                    opponentLives--;
+                    updateLivesDisplay();
                 }
-                if (opOneLives === 1 && opOneInterval) {
-                    clearInterval(opOneInterval);
+                if (opponentLives === 1 && opponentInterval) {
+                    clearInterval(opponentInterval);
                 }
             }, 5000 + Math.random() * 3000);
-
-            opTwoInterval = setInterval(() => {
-                if (opTwoLives > 0) {
-                    opTwoLives--;
-                    document.getElementById('mathOp2LivesDebug').textContent = '[Debug] Opponent 2 Lives ' + String(opTwoLives) + '/3';
-                }
-                if (opTwoLives === 1 && opTwoInterval) {
-                    clearInterval(opTwoInterval);
-                }
-            }, 6000 + Math.random() * 2000);
         }
     }
 
@@ -282,30 +290,20 @@ function mathGameLogic(generatedQuestions, winner, option) {
             if (count < questions.length - 1) {
                 count++;
                 currentQuestion = questions[count];
-                document.getElementById('mathQuestionNum').textContent = '[Debug] Question ' + String(count + 1) + '/' + String(questions.length);
                 document.getElementById('mathQuestion').textContent = String(currentQuestion.expression);
                 document.getElementById('mathInput').value = '';
                 document.getElementById('mathError').textContent = '';
             } else {
-                showWinScreen()
+                showWin()
             }
         } else {
             lives--;
             if (lives == 0) {
-                document.getElementById('mathLivesDebug').textContent = '[Debug] Lives ' + String(lives) + '/3';
-
-                document.getElementById('mathQuestion').textContent = '[Debug] Game Over';
-
-                document.getElementById('mathInput').style.display = 'none';
-                document.getElementById('mathButton').style.display = 'none';
-                document.getElementById('mathError').style.display = 'none';
-
-                // Stop opponent timers
-                if (opOneInterval) clearInterval(opOneInterval);
-                if (opTwoInterval) clearInterval(opTwoInterval);
+                updateLivesDisplay()
+                showLose()
 
             } else {
-                document.getElementById('mathLivesDebug').textContent = '[Debug] Lives ' + String(lives) + '/3';
+                updateLivesDisplay();
                 document.getElementById('mathInput').value = '';
                 document.getElementById('mathError').textContent = getFailureMessage();
             }
@@ -382,6 +380,8 @@ function startTypingGame() {
             vscode.postMessage({ command: 'applyWinner', winner: winner });
         }
     });
+
+
 }
 
 // ==== TYPING RACE GAME END ====

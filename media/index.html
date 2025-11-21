@@ -6,6 +6,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Jersey+10&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
 </head>
 <body>
+   <!-- Hidden heart icon for JavaScript to reference -->
+   <img id="heartIconTemplate" src="{{iconHeart}}" style="display:none;" />
+
     <!-- Main Page -->
     <div class="top-bar">
         <div id="iconBtn" class="bar-icon">
@@ -14,7 +17,7 @@
     </div>
     <div id="main-page" class="gameboy-shell">
         <div class="header">
-            <div class="game-title">
+            <div class="game-title">`
                 <div>
                     <h1>CONFLICT</h1>
                     <h1 class="crashout">CRASH-OUT</h1>
@@ -106,28 +109,26 @@
             <img src="{{iconYou}}" height="50px"/>
             <span class="player-text">YOU</span>
             <!-- player progress/lives go here -->
-            <div></div>
+            <div id="playerLivesDisplayMath"></div>
         </div>
         <div class="opponent">
             <img src="{{iconOpponent}}" height="50px"/>
             <span class="player-text">OPPONENT</span>
             <!-- player progress/lives go here -->
-            <div></div>
+            <div id="opponentLivesDisplayMath"></div>
         </div>
        </div>
        <div class="game-box">
-        <h2>Solve:</h2>
-          <div class="math-container">
-            <p id="mathLivesDebug"></p>
-            <p id="mathOp1LivesDebug"></p>
-            <p id="mathOp2LivesDebug"></p>
-            <p id="mathWinner"></p>
-            <p id="mathQuestionNum"></p>
-            <h3 id="mathQuestion"></h3>
-            <p id="mathError"></p>
-            <input id="mathInput" />
-            <button id="mathButton">Enter</button>
-          </div>
+        <h2 class="fighter-name">SOLVE:</h2>
+        <!-- <p id="mathLivesDebug"></p>
+        <p id="mathOp1LivesDebug"></p>
+        <p id="mathOp2LivesDebug"></p>
+        <p id="mathWinner"></p>
+        <p id="mathQuestionNum"></p> -->
+        <h2 class="fighter-name" id="mathQuestion"></h2>
+        <p class="math-error" id="mathError"></p>
+        <input class="math-input" id="mathInput" placeholder="Answer here..."/>
+        <button class="math-button" id="mathButton">Enter</button>
        </div>
         </div>
     </div>
@@ -159,7 +160,7 @@
     </div>
 
     <!-- NEED TO MAKE THESE HIDDEN AND LOGIC TO DISPLAY THEM LATER -->
-    <div id="page-win" class="win-lose">
+    <div id="page-win" class="win-lose" style="display:none;">
         <img src="{{iconYou}}" height="150px"/>
         <h1 class="win-lose-text">YOU</h1>
         <h1 class="bottom-text">WIN!</h1>
@@ -170,7 +171,7 @@
         </button>
     </div>
 
-    <div id="page-lose" class="win-lose">
+    <div id="page-lose" class="win-lose" style="display:none;">
         <img src="{{iconSkull}}" height="150px"/>
         <h1 class="win-lose-text">GAME</h1>
         <h1 class="bottom-text">OVER</h1>

@@ -64,9 +64,9 @@ async function openGameWebview(
         async (message) => {
             switch (message.command) {
                 case "resolve":
-                    vscode.window.showInformationMessage(
-                        `Player selected: ${message.option}`
-                    );
+                    // vscode.window.showInformationMessage(
+                    //     `Player selected: ${message.option}`
+                    // );
 
                     // Tell the webview to move to the wheel screen
                     panel.webview.postMessage({
@@ -78,15 +78,13 @@ async function openGameWebview(
 
                 case "playMathGame":
                     const questions = generateQuestions();
-                    vscode.window.showInformationMessage(
-                        `Option: ${message.option}` + ` Winner: ${message.winner}`
-                    );
                     panel.webview.postMessage({ 
                         command: 'displayMathGame',
                         questions: questions,
                         option: message.option,
                         winner: message.winner
                     });
+                    break;
                     
 
                 case "finishResult":
@@ -96,9 +94,9 @@ async function openGameWebview(
                     // const opponent = chooseRandomOpponent(options, userChoice);
                     // const winner = chooseWeightedWinner(userChoice, opponent);
                     await resolveAllConflicts(doc, message.winner);
-                    vscode.window.showInformationMessage(
-                        `Game result: ${message.result}` + `... Winner: ${message.winner}`
-                    );
+                    // vscode.window.showInformationMessage(
+                    //     `Game result: ${message.result}` + `... Winner: ${message.winner}`
+                    // );
                     break;
                 case "closeExtension":
                     panel.dispose(); // This will close the webview panel
@@ -163,6 +161,11 @@ async function getHtmlForWebview(
         vscode.Uri.joinPath(context.extensionUri, "media", "icons", "skull.svg")
     );
 
+    const iconHeart = webview.asWebviewUri(
+        vscode.Uri.joinPath(context.extensionUri, "media", "icons", "heart.svg")
+    );
+
+
     const jersey10Uri = webview.asWebviewUri(
         vscode.Uri.joinPath(context.extensionUri, "media", "fonts", "Jersey10-Regular.ttf")
     );
@@ -183,6 +186,7 @@ async function getHtmlForWebview(
         .replace(/{{iconOpponent}}/g, iconOpponent.toString())
         .replace(/{{iconExit}}/g, iconExit.toString())
         .replace("{{iconSkull}}", iconSkull.toString())
+        .replace("{{iconHeart}}", iconHeart.toString())
         .replace("{{fontJersey10}}", jersey10Uri.toString())
         .replace("{{fontJetBrains}}", jetBrainsUri.toString());
 

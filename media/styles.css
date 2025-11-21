@@ -252,6 +252,34 @@ body {
     width: 90%;
     min-height: 500px;
     margin: auto 0px;
+    padding: 12px;
+}
+
+.math-error {
+    color: #A12523;
+    font-size: 24px;
+}
+
+#mathQuestion {
+    color: #1E1E1E;
+}
+
+.math-button {
+    font-family: 'Jersey 10';
+    font-size: 24px; 
+    padding: 10px 25px; 
+    border: 2px solid #1E1E1E; 
+    border-radius: 10px; 
+    background-color: #FCD8CC; cursor: pointer;
+}
+
+.math-input {
+    width: 90%; 
+    margin: 20px; 
+    padding: 10px; 
+    font-family: 'JetBrains Mono'; 
+    border: 2px solid #1E1E1E; 
+    border-radius: 8px;
 }
 
 .win-lose {
