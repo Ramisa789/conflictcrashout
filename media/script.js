@@ -106,6 +106,17 @@ function chooseWeightedWinner(userChoice, opponent) {
     return weighted[randomIndex];
 }
 
+function showEndPageAndApplyChanges(game_id, winner) {
+    document.getElementById(game_id).style.display = 'none';
+    if (winner === selectedOption) {
+        document.getElementById('page-win').style.display = 'flex';
+    } else {
+        document.getElementById('page-lose').style.display = 'flex';
+    }
+    
+    vscode.postMessage({ command: 'finishResult', result: 'Coding Craze - lose', winner: winner, option: userChoice });
+}
+
 // Show game page based on chosen index
 function showGamePage(index) {
     // const pages = ['page-coding', 'page-typing', 'page-math'];
@@ -382,8 +393,7 @@ function startTypingGame() {
     typingBox.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            const vscode = acquireVsCodeApi();
-            vscode.postMessage({ command: 'applyWinner', winner: winner });
+            showEndPageAndApplyChanges('page-typing', winner);
         }
     });
 }
