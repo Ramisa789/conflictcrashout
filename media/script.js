@@ -125,12 +125,16 @@ function showGamePage(index) {
     const opponent = chooseRandomOpponent(options, selectedOption);
     const winner = chooseWeightedWinner(selectedOption, opponent);
     
-    // Start coding game with winner info
-    startCodingGame(winner, selectedOption);
+    // For Coding Craze, opponent always wins
+    const codingWinner = opponent;
+    startCodingGame(codingWinner, selectedOption, opponent);
 
     if (pages[index] == 'page-math') {
         vscode.postMessage({ command: 'playMathGame', option: selectedOption, winner })
     }
+
+    // Notify extension
+    vscode.postMessage({ command: 'finishResult', result: wheelOptions[index], option: selectedOption, winner });
 }
 
 // Close extension buttons
@@ -387,7 +391,7 @@ function startTypingGame() {
 // ==== TYPING RACE GAME END ====
 
 // ==== CODING CRAZE GAME START ====
-function startCodingGame(winner, userChoice) {
+function startCodingGame(winner, userChoice, opponent) {
     let playerLives = 3;
     let opponentLives = 3;
     let opponentInterval = null;
@@ -416,45 +420,36 @@ function startCodingGame(winner, userChoice) {
         .map((tc, i) => `<p>Test ${i + 1}: Input: ${JSON.stringify(tc.input)}, Expected: ${JSON.stringify(tc.expected)}</p>`)
         .join('');
     
-    // Simulate opponent solving based on who should win
+    // Update lives display
+    function updateLivesDisplay() {
+        const heartIconSrc = document.getElementById('heartIconTemplate').src;
+        const playerHeartsHtml = `<img src="${heartIconSrc}" height="20px" style="margin: 2px;"/>`.repeat(playerLives);
+        const opponentHeartsHtml = `<img src="${heartIconSrc}" height="20px" style="margin: 2px;"/>`.repeat(opponentLives);
+        document.getElementById('playerLivesDisplay').innerHTML = playerHeartsHtml;
+        document.getElementById('opponentLivesDisplay').innerHTML = opponentHeartsHtml;
+    }
+    
+    // Opponent always wins - simulate them solving faster
     function simulateOpponent() {
-        if (winner === userChoice) {
-            // Player should win - opponent loses lives faster
-            opponentInterval = setInterval(() => {
-                if (opponentLives > 0) {
-                    opponentLives--;
-                    if (opponentLives === 0) {
-                        clearInterval(opponentInterval);
-                    }
-                }
-            }, 8000 + Math.random() * 4000);
-        } else {
-            // Opponent should win - slower life loss, stops at 1
-            opponentInterval = setInterval(() => {
-                if (opponentLives > 1) {
-                    opponentLives--;
-                }
-            }, 15000 + Math.random() * 5000);
-        }
+        // Opponent beats player by staying at 1+ lives
+        opponentInterval = setInterval(() => {
+            if (opponentLives > 1 && playerLives > 0) {
+                opponentLives--;
+                updateLivesDisplay();
+            }
+        }, 15000 + Math.random() * 5000);
     }
     
-    function showWinPage() {
-        if (opponentInterval) clearInterval(opponentInterval);
-        document.getElementById('page-coding').style.display = 'none';
-        document.getElementById('page-win').style.display = 'flex';
-        // Apply the winner's changes to resolve merge conflict
-        vscode.postMessage({ command: 'finishResult', result: 'win', winner: winner });
-    }
-    
-    function showLosePage() {
+    function showLoseAndApplyChanges() {
         if (opponentInterval) clearInterval(opponentInterval);
         document.getElementById('page-coding').style.display = 'none';
         document.getElementById('page-lose').style.display = 'flex';
-        // Apply the winner's changes to resolve merge conflict
-        vscode.postMessage({ command: 'finishResult', result: 'lose', winner: winner });
+        
+        // Apply opponent's changes (winner is the opponent for coding game)
+        vscode.postMessage({ command: 'finishResult', result: 'Coding Craze - lose', winner: winner, option: userChoice });
     }
     
-    // Start opponent simulation
+    updateLivesDisplay();
     simulateOpponent();
     
     // Run Tests button
@@ -472,17 +467,22 @@ function startCodingGame(winner, userChoice) {
             resultsDiv.appendChild(p);
         });
         
-        // Check win/lose conditions
-        if (results.passed === results.total) {
-            // All tests passed - check if opponent is out
-            if (opponentLives === 0) {
-                showWinPage();
+        // Player always loses in Coding Craze
+        if (results.passed < results.total) {
+            playerLives--;
+            updateLivesDisplay();
+            if (playerLives === 0) {
+                showLoseAndApplyChanges();
             }
         } else {
-            // Tests failed - player loses a life
-            playerLives--;
-            if (playerLives === 0) {
-                showLosePage();
+            // Even if they pass, they need to beat opponent who has more lives
+            if (opponentLives > 0) {
+                // Keep playing, but opponent will outlast them
+                playerLives--;
+                updateLivesDisplay();
+                if (playerLives === 0) {
+                    showLoseAndApplyChanges();
+                }
             }
         }
     };

@@ -6,6 +6,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Jersey+10&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Hidden heart icon for JavaScript to reference -->
+    <img id="heartIconTemplate" src="{{iconHeart}}" style="display:none;" />
+    
     <!-- Main Page -->
     <div class="top-bar">
         <div id="iconBtn" class="bar-icon">
@@ -83,14 +86,12 @@
         <div class="player">
             <img src="{{iconYou}}" height="50px" />
             <span class="player-text">YOU</span>
-            <!-- player progress/lives go here -->
-            <div></div>
+            <div id="playerLivesDisplay"></div>
         </div>
         <div class="opponent">
             <img src="{{iconOpponent}}" height="50px" />
             <span class="player-text">OPPONENT</span>
-            <!-- player progress/lives go here -->
-            <div></div>
+            <div id="opponentLivesDisplay"></div>
         </div>
        </div>
        <div class="game-box">
@@ -169,7 +170,7 @@
     </div>
 
     <!-- NEED TO MAKE THESE HIDDEN AND LOGIC TO DISPLAY THEM LATER -->
-    <div id="page-win" class="win-lose">
+    <div id="page-win" class="win-lose" style="display:none;">
         <img src="{{iconYou}}" height="150px"/>
         <h1 class="win-lose-text">YOU</h1>
         <h1 class="bottom-text">WIN!</h1>
@@ -180,7 +181,7 @@
         </button>
     </div>
 
-    <div id="page-lose" class="win-lose">
+    <div id="page-lose" class="win-lose" style="display:none;">
         <img src="{{iconSkull}}" height="150px"/>
         <h1 class="win-lose-text">GAME</h1>
         <h1 class="bottom-text">OVER</h1>

@@ -163,6 +163,10 @@ async function getHtmlForWebview(
         vscode.Uri.joinPath(context.extensionUri, "media", "icons", "skull.svg")
     );
 
+    const iconHeart = webview.asWebviewUri(
+        vscode.Uri.joinPath(context.extensionUri, "media", "icons", "heart.svg")
+    );
+
     const jersey10Uri = webview.asWebviewUri(
         vscode.Uri.joinPath(context.extensionUri, "media", "fonts", "Jersey10-Regular.ttf")
     );
@@ -183,6 +187,7 @@ async function getHtmlForWebview(
         .replace(/{{iconOpponent}}/g, iconOpponent.toString())
         .replace(/{{iconExit}}/g, iconExit.toString())
         .replace("{{iconSkull}}", iconSkull.toString())
+        .replace(/{{iconHeart}}/g, iconHeart.toString())
         .replace("{{fontJersey10}}", jersey10Uri.toString())
         .replace("{{fontJetBrains}}", jetBrainsUri.toString());
 
