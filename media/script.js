@@ -112,18 +112,25 @@ function showEndPageAndApplyChanges(game_id, winner) {
         document.getElementById('page-win').style.display = 'flex';
     } else {
         document.getElementById('page-lose').style.display = 'flex';
+        const loseApplying = document.querySelector('#page-lose .applying');
+        if (loseApplying) loseApplying.textContent = `Applying ${winner}...`;
     }
     
-    vscode.postMessage({ command: 'finishResult', result: 'Coding Craze - lose', winner: winner, option: userChoice });
+    vscode.postMessage({ command: 'finishResult', result: 'Typing Racer', winner: winner, option: selectedOption});
 }
 
 // Show game page based on chosen index
 function showGamePage(index) {
-    // const pages = ['page-coding', 'page-typing', 'page-math'];
+    const pages = ['page-coding', 'page-typing', 'page-math'];
+    const options = ['Current Changes', 'Incoming Changes', 'Combination'];
+    const opponent = chooseRandomOpponent(options, selectedOption);
+    const winner = chooseWeightedWinner(selectedOption, opponent);
     // pages.forEach((id, i) => {
     //     document.getElementById(id).style.display = i === index ? 'block' : 'none';
     // });
-    document.getElementById('page-coding').style.display = 'block'; //TODO: REMOVE LATER
+    document.getElementById('page-typing').style.display = 'block'; //TODO: REMOVE LATER
+    startTypingGame(winner);
+    
     
     document.getElementById('wheel-page').style.display = 'none';
 
@@ -132,20 +139,18 @@ function showGamePage(index) {
 
     if (selectedFighter) selectedFighter.textContent = wheelOptions[index];
     
-    const options = ['Current Changes', 'Incoming Changes', 'Combination'];
-    const opponent = chooseRandomOpponent(options, selectedOption);
-    const winner = chooseWeightedWinner(selectedOption, opponent);
+
     
     // For Coding Craze, opponent always wins
-    const codingWinner = opponent;
-    startCodingGame(codingWinner, selectedOption, opponent);
+    // const codingWinner = opponent;
+    // startCodingGame(codingWinner, selectedOption, opponent);
 
-    if (pages[index] == 'page-math') {
-        vscode.postMessage({ command: 'playMathGame', option: selectedOption, winner })
-    }
+    // if (pages[index] == 'page-math') {
+    //     vscode.postMessage({ command: 'playMathGame', option: selectedOption, winner })
+    // }
 
     // Notify extension
-    vscode.postMessage({ command: 'finishResult', result: wheelOptions[index], option: selectedOption, winner });
+    //vscode.postMessage({ command: 'finishResult', result: wheelOptions[index], option: selectedOption, winner });
 }
 
 // Close extension buttons
@@ -339,7 +344,7 @@ function getRandomQuote() {
             "A bad game doesn't make you a bad player.",
             "Losing doesn't define you, it only proves you're still trying.",
             "Defeat is not an end, it's a new beginning.",
-            "One defeat doesn NOT take away the effort and heart you put in."
+            "One defeat doesn't take away the effort and heart you put in."
         ];
     const idx = Math.floor(Math.random() * QUOTES.length);
     return QUOTES[idx];
@@ -362,7 +367,7 @@ function getOpponentWPM(userWPM, winner) {
     }
 }
 
-function startTypingGame() {
+function startTypingGame(winner) {
     const quote = getRandomQuote();
     document.getElementById('typing-quote').textContent = quote;
     let startTime = null;
@@ -382,7 +387,6 @@ function startTypingGame() {
         const elapsed = timerStarted ? Date.now() - startTime : 0;
         const wpm = calculateWPM(input.length, elapsed);
         wpmElem.textContent = 'WPM: ' + wpm;
-        const winner = 'Combination'
         const opponentWpm = getOpponentWPM(wpm, winner);
         opponentWpmElem.textContent = 'WPM: ' + opponentWpm;
         let correct = 0;
